@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS familyplan CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE familyplan;
+CREATE DATABASE IF NOT EXISTS portale_familyplan CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE portale_familyplan;
 
 CREATE TABLE users (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

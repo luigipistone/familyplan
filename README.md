@@ -15,9 +15,9 @@ Webapp mobile-first in PHP, JavaScript/AJAX e MySQL per gestire calendario famil
 
 ## Installazione
 
-1. Crea il database MySQL importando `database/schema.sql`.
+1. Crea/importa il database MySQL `portale_familyplan` usando `database/schema.sql`.
 2. Copia `config.sample.php` in `config.local.php` e inserisci le credenziali reali del database. Il file locale è ignorato da Git.
-3. Pubblica la root del repository: `index.php` è volutamente nella root del progetto. In sviluppo puoi avviare:
+3. Pubblica la root del repository: `index.php` è volutamente nella root del progetto e la cartella `public/` non serve più. In sviluppo puoi avviare:
 
 ```bash
 php -S localhost:8000 -t .

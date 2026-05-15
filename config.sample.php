@@ -3,7 +3,7 @@ return [
     'db' => [
         'host' => '127.0.0.1',
         'port' => 3306,
-        'name' => 'familyplan',
+        'name' => 'portale_familyplan',
         'user' => 'familyplan_user',
         'pass' => 'change-me',
         'charset' => 'utf8mb4',
