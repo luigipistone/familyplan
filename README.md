@@ -17,11 +17,13 @@ Webapp mobile-first in PHP, JavaScript/AJAX e MySQL per gestire calendario famil
 
 1. Crea il database MySQL importando `database/schema.sql`.
 2. Copia `config.sample.php` in `config.local.php` e inserisci le credenziali reali del database. Il file locale è ignorato da Git.
-3. Pubblica la cartella `public/` come document root o avvia in sviluppo:
+3. Pubblica la root del repository: `index.php` è volutamente nella root del progetto. In sviluppo puoi avviare:
 
 ```bash
-php -S localhost:8000 -t public
+php -S localhost:8000 -t .
 ```
+
+4. In produzione lascia attivo il file `.htaccess` se usi Apache; con Nginx aggiungi regole equivalenti per negare l'accesso HTTP a `src/`, `database/`, `.git/`, `config.local.php` e ai file di documentazione/configurazione.
 
 ## Account admin iniziale
 
