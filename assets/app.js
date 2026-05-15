@@ -7,7 +7,6 @@ const pageDefs = {
   family: ['Famiglia', 'family'],
   reminders: ['Promemoria', 'bell'],
   notes: ['Note', 'note'],
-  profile: ['Profilo', 'user'],
   settings: ['Impostazioni', 'settings'],
   users: ['Utenti', 'users'],
 };
@@ -18,7 +17,6 @@ const widgetDefs = {
   family: ['Figli oggi', 'family'],
   reminders: ['Promemoria', 'bell'],
   notes: ['Ultime note', 'note'],
-  profile: ['Profilo', 'user'],
   settings: ['Impostazioni', 'settings'],
   users: ['Utenti', 'users'],
 };
@@ -35,6 +33,10 @@ const icons = {
   settings: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7.2 7.2 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.8-1L14.4 3h-4l-.4 3a7 7 0 0 0-1.8 1L5.8 6l-2 3.5 2 1.5a7.2 7.2 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.8 1l.4 3h4l.4-3a7 7 0 0 0 1.8-1l2.4 1 2-3.5-2.1-1.5c.1-.3.1-.7.1-1z"/></svg>',
   moon: '<svg viewBox="0 0 24 24"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.7 8.7 0 1 0 20 15.5z"/></svg>',
   logout: '<svg viewBox="0 0 24 24"><path d="M10 5H5v14h5"/><path d="M14 8l4 4-4 4M18 12H9"/></svg>',
+  plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  edit: '<svg viewBox="0 0 24 24"><path d="M4 20h4l11-11a2.5 2.5 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+  widgets: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>',
+  x: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>',
 };
 
 const $ = s => document.querySelector(s);
@@ -61,7 +63,8 @@ function toast(msg) {
 function formData(form) { return Object.fromEntries(new FormData(form).entries()); }
 
 async function boot() {
-  injectStaticIcons();
+  injectStaticIcons(document);
+  setupModalForms();
   try {
     const s = await api('session');
     state.user = s.user;
@@ -72,8 +75,33 @@ async function boot() {
   }
 }
 
-function injectStaticIcons() {
-  $$('[data-icon]').forEach(el => { el.outerHTML = icon(el.dataset.icon); });
+function injectStaticIcons(root = document) {
+  root.querySelectorAll('[data-icon]').forEach(el => { el.outerHTML = icon(el.dataset.icon); });
+}
+
+function setupModalForms() {
+  $$('.modal-form').forEach(form => {
+    if (!form.querySelector('.modal-title')) {
+      form.insertAdjacentHTML('afterbegin', `<div class="modal-title"><h3>${esc(form.dataset.modalTitle || 'Modifica')}</h3><button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button></div>`);
+    }
+  });
+}
+
+function openModal(id) {
+  closeModal(false);
+  const modal = $('#' + id);
+  if (!modal) return;
+  $('#modalBackdrop').classList.add('active');
+  modal.classList.remove('hidden');
+  modal.querySelector('input, select, textarea, button:not(.modal-close)')?.focus();
+}
+
+function closeModal(reset = false) {
+  $('#modalBackdrop').classList.remove('active');
+  $$('.modal-form:not(.hidden)').forEach(form => {
+    form.classList.add('hidden');
+    if (reset && !['profileForm', 'widgetForm', 'settingsForm'].includes(form.id)) form.reset();
+  });
 }
 
 function showAuth() {
@@ -100,6 +128,10 @@ function allowedPages() {
   return Object.keys(pageDefs).filter(p => !['settings', 'users'].includes(p) || state.user.role === 'admin');
 }
 
+function allowedWidgets() {
+  return Object.keys(widgetDefs).filter(w => !['settings', 'users'].includes(w) || state.user.role === 'admin');
+}
+
 function renderNav() {
   $('#pageNav').innerHTML = allowedPages().map(page => `<a href="?page=${page}" data-page-link="${page}">${icon(pageDefs[page][1])}<span>${pageDefs[page][0]}</span></a>`).join('');
   $$('.admin-only').forEach(e => e.classList.toggle('hidden', state.user.role !== 'admin'));
@@ -124,6 +156,7 @@ async function loadAll() {
   state.data = { events: events.events, shopping: shopping.lists, family: family.tasks, reminders: reminders.reminders, notes: notes.notes, notifications: notifs.notifications };
   fillUserSelects();
   renderDashboard();
+  renderWidgetForm();
   renderCalendar();
   renderShopping();
   renderFamily();
@@ -135,20 +168,21 @@ async function loadAll() {
 }
 
 function defaultWidgets() {
-  return Object.keys(widgetDefs).filter(k => state.user.role === 'admin' || !['settings', 'users'].includes(k)).map((widget_key, i) => ({ widget_key, enabled: 1, sort_order: i }));
+  return allowedWidgets().map((widget_key, i) => ({ widget_key, enabled: 1, sort_order: i }));
 }
 
 function renderDashboard() {
-  const active = state.widgets.filter(w => Number(w.enabled));
-  $('#dashboard').innerHTML = active.map(w => widgetCard(w.widget_key)).join('') + disabledWidgetPicker();
+  const active = state.widgets.filter(w => Number(w.enabled) && allowedWidgets().includes(w.widget_key));
+  $('#dashboard').innerHTML = active.length ? active.map(w => widgetCard(w.widget_key)).join('') : '<article class="card"><h3>Nessun widget attivo</h3><p>Usa l’icona widget in alto per riattivarli.</p></article>';
 }
 
 function widgetCard(key) {
   const [title, iconName] = widgetDefs[key] || [key, 'home'];
+  const action = `<a href="?page=${key}" data-page-link="${key}">Apri pagina</a>`;
   return `<article class="widget" data-widget="${key}">
     <div class="widget-head">${icon(iconName)}<h3>${title}</h3></div>
     <div class="widget-body">${widgetBody(key)}</div>
-    <div class="widget-actions"><a href="?page=${key}" data-page-link="${key}">Apri pagina</a><label class="check"><input type="checkbox" checked data-toggle-widget="${key}"> visibile</label></div>
+    <div class="widget-actions">${action}</div>
   </article>`;
 }
 
@@ -173,18 +207,14 @@ function widgetBody(key) {
     const notes = state.data.notes.filter(n => !n.archived_at).slice(0, 2);
     return notes.length ? notes.map(n => `<p><strong>${esc(n.title)}</strong><br><small>${esc((n.body || '').slice(0, 70))}</small></p>`).join('') : '<p>Nessuna nota attiva.</p>';
   }
-  if (key === 'profile') return `<p>${esc(state.user.email || 'Email da completare')}</p><p><small>Tema: ${esc(state.user.theme)}</small></p>`;
   if (key === 'users') return `<p>${state.users.length} utenti collegati</p>`;
   if (key === 'settings') return '<p>Preferenze famiglia e notifiche.</p>';
   return '<p>Widget disponibile.</p>';
 }
 
-function disabledWidgetPicker() {
-  const activeKeys = new Set(state.widgets.filter(w => Number(w.enabled)).map(w => w.widget_key));
-  const available = Object.keys(widgetDefs).filter(k => allowedPages().includes(k) && !activeKeys.has(k));
-  return `<article class="widget widget-manage"><div class="widget-head">${icon('settings')}<h3>Personalizza widget</h3></div>
-    ${available.length ? available.map(k => `<label class="check"><input type="checkbox" data-add-widget="${k}"> aggiungi ${widgetDefs[k][0]}</label>`).join('') : '<p>Tutti i widget sono visibili.</p>'}
-  </article>`;
+function renderWidgetForm() {
+  const enabled = new Set(state.widgets.filter(w => Number(w.enabled)).map(w => w.widget_key));
+  $('#widgetChoices').innerHTML = allowedWidgets().map(key => `<label class="widget-choice">${icon(widgetDefs[key][1])}<span>${widgetDefs[key][0]}</span><input type="checkbox" name="widgets" value="${key}" ${enabled.has(key) ? 'checked' : ''}></label>`).join('');
 }
 
 function fillUserSelects() {
@@ -243,7 +273,7 @@ async function saveForm(form, action, transform = x => x) {
   await api(action, { method: 'POST', body: JSON.stringify(payload) });
   toast('Salvato');
   form.reset();
-  form.classList.add('hidden');
+  closeModal(false);
   await loadAll();
 }
 
@@ -255,7 +285,10 @@ document.addEventListener('click', async e => {
     return;
   }
   const open = e.target.closest('[data-open]');
-  if (open) $('#' + open.dataset.open).classList.toggle('hidden');
+  if (open) openModal(open.dataset.open);
+  const close = e.target.closest('.modal-close');
+  if (close) closeModal(true);
+  if (e.target.id === 'modalBackdrop') closeModal(true);
   const arch = e.target.closest('[data-archive-list]');
   if (arch) {
     await api('shopping', { method: 'POST', body: JSON.stringify({ id: arch.dataset.archiveList, archive: true }) });
@@ -266,6 +299,8 @@ document.addEventListener('click', async e => {
     await api('logout', { method: 'POST', body: '{}' });
     location.reload();
   }
+  if (e.target.id === 'profileBtn' || e.target.closest('#profileBtn')) openModal('profileForm');
+  if (e.target.id === 'widgetBtn' || e.target.closest('#widgetBtn')) openModal('widgetForm');
   if (e.target.id === 'themeToggle' || e.target.closest('#themeToggle')) {
     state.user.theme = document.body.classList.contains('dark') ? 'light' : 'dark';
     applyTheme(state.user.theme);
@@ -277,16 +312,10 @@ document.addEventListener('click', async e => {
     await api('notifications', { method: 'POST', body: '{}' });
     await loadAll();
   }
-  if (e.target.id === 'saveWidgets') {
-    const existing = state.widgets.map(w => ({ key: w.widget_key, enabled: !!document.querySelector(`[data-toggle-widget="${w.widget_key}"]`)?.checked }));
-    const added = $$('[data-add-widget]:checked').map(i => ({ key: i.dataset.addWidget, enabled: true }));
-    await api('dashboard', { method: 'POST', body: JSON.stringify({ widgets: [...existing, ...added] }) });
-    toast('Dashboard aggiornata');
-    await loadAll();
-  }
 });
 
 window.addEventListener('popstate', () => navigateTo(new URLSearchParams(location.search).get('page') || 'dashboard', false));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(true); });
 
 $('#loginForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -305,8 +334,17 @@ $('#familyForm').addEventListener('submit', e => { e.preventDefault(); saveForm(
 $('#childForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'user-save', d => ({ ...d, phone: '', role: 'familiare', category: 'figlio', active: true })); });
 $('#reminderForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'reminders', d => ({ ...d, shared: !!d.shared })); });
 $('#noteForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'notes', d => ({ ...d, archived: !!d.archived })); });
-$('#profileForm').addEventListener('submit', async e => { e.preventDefault(); const r = await api('profile-save', { method: 'POST', body: JSON.stringify(formData(e.target)) }); state.user = r.user; applyTheme(state.user.theme); toast('Profilo aggiornato'); });
+$('#profileForm').addEventListener('submit', async e => { e.preventDefault(); const r = await api('profile-save', { method: 'POST', body: JSON.stringify(formData(e.target)) }); state.user = r.user; applyTheme(state.user.theme); closeModal(false); await loadAll(); toast('Profilo aggiornato'); });
 $('#settingsForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'settings', d => ({ settings: d })); });
 $('#userForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'user-save', d => ({ ...d, active: !!d.active })); });
+$('#widgetForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const chosen = new Set($$('#widgetChoices input[name="widgets"]:checked').map(i => i.value));
+  const widgets = allowedWidgets().map(key => ({ key, enabled: chosen.has(key) }));
+  await api('dashboard', { method: 'POST', body: JSON.stringify({ widgets }) });
+  closeModal(false);
+  toast('Widget aggiornati');
+  await loadAll();
+});
 
 boot();

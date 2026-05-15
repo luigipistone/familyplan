@@ -365,7 +365,7 @@ function all_user_ids(): array
 
 function seed_widgets(int $userId, string $role): void
 {
-    $widgets = ['calendar', 'shopping', 'family', 'reminders', 'notes', 'profile'];
+    $widgets = ['calendar', 'shopping', 'family', 'reminders', 'notes'];
     if ($role === 'admin') array_push($widgets, 'settings', 'users');
     $stmt = db()->prepare('INSERT INTO dashboard_widgets (user_id, widget_key, enabled, sort_order) VALUES (?, ?, 1, ?)');
     foreach ($widgets as $i => $widget) $stmt->execute([$userId, $widget, $i]);
