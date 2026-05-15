@@ -17,8 +17,6 @@ const widgetDefs = {
   family: ['Figli oggi', 'family'],
   reminders: ['Promemoria', 'bell'],
   notes: ['Ultime note', 'note'],
-  settings: ['Impostazioni', 'settings'],
-  users: ['Utenti', 'users'],
 };
 
 const icons = {
@@ -44,6 +42,15 @@ const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
 const today = () => new Date().toISOString().slice(0, 10);
 const icon = name => `<span class="line-icon" aria-hidden="true">${icons[name] || icons.home}</span>`;
+const categoryLabels = { mamma: 'Mamma', 'papà': 'Papà', figlio: 'Figlio', nonno: 'Nonno', nonna: 'Nonna', zio: 'Zio', zia: 'Zia', familiare: 'Familiare' };
+const productCategories = {
+  'Frutta e Verdura': ['Mele', 'Banane', 'Insalata', 'Pomodori', 'Carote', 'Zucchine'],
+  'Pane e Pasta': ['Pane', 'Pasta', 'Riso', 'Farina', 'Cracker'],
+  'Latte e Freschi': ['Latte', 'Yogurt', 'Mozzarella', 'Uova', 'Burro'],
+  'Carne e Pesce': ['Pollo', 'Tacchino', 'Manzo', 'Salmone', 'Tonno'],
+  'Detersivi': ['Detersivo lavatrice', 'Ammorbidente', 'Sapone piatti', 'Sgrassatore', 'Carta casa'],
+  'Dispensa': ['Olio', 'Sale', 'Zucchero', 'Caffè', 'Biscotti'],
+};
 
 async function api(action, opts = {}) {
   const res = await fetch(`/api.php?action=${action}`, { headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': state.csrf }, ...opts });
@@ -61,10 +68,16 @@ function toast(msg) {
 }
 
 function formData(form) { return Object.fromEntries(new FormData(form).entries()); }
+function labelCategory(value) { return categoryLabels[value] || (value ? value.charAt(0).toUpperCase() + value.slice(1) : ''); }
+function optionRange(max, step = 1) { return Array.from({ length: Math.ceil(max / step) }, (_, i) => String(i * step).padStart(2, '0')).map(v => `<option value="${v}">${v}</option>`).join(''); }
+function combineDateTime(date, hour, minute) { return date ? `${date}T${hour || '00'}:${minute || '00'}` : ''; }
+function toSqlDateTime(value) { return value ? value.replace('T', ' ') + ':00' : ''; }
 
 async function boot() {
   injectStaticIcons(document);
   setupModalForms();
+  setupSoftPickers();
+  renderProductCatalog();
   try {
     const s = await api('session');
     state.user = s.user;
@@ -77,6 +90,35 @@ async function boot() {
 
 function injectStaticIcons(root = document) {
   root.querySelectorAll('[data-icon]').forEach(el => { el.outerHTML = icon(el.dataset.icon); });
+}
+
+
+function setupSoftPickers() {
+  $$('select[name$="_hour"]').forEach(select => { select.innerHTML = optionRange(24); });
+  $$('select[name$="_minute"]').forEach(select => { select.innerHTML = optionRange(60, 5); });
+  const todayIso = today();
+  ['starts_date', 'task_date', 'list_date'].forEach(name => { const input = document.querySelector(`[name="${name}"]`); if (input) input.value = todayIso; });
+}
+
+function renderProductCatalog() {
+  const wrap = $('#productCatalog');
+  if (!wrap) return;
+  wrap.innerHTML = Object.entries(productCategories).map(([category, products], index) => `
+    <div class="product-category ${index === 0 ? 'active' : ''}" data-category-panel="${esc(category)}">
+      <button type="button" data-product-category="${esc(category)}">${esc(category)}</button>
+      <div class="product-list">${products.map(product => `<button type="button" data-product="${esc(product)}">${esc(product)}</button>`).join('')}</div>
+    </div>`).join('');
+}
+
+function toggleProductCategory(category) {
+  $$('.product-category').forEach(panel => panel.classList.toggle('active', panel.dataset.categoryPanel === category));
+}
+
+function addShoppingProduct(product) {
+  const textarea = $('#shoppingForm textarea[name="items"]');
+  const items = textarea.value.split('\n').map(v => v.trim()).filter(Boolean);
+  if (!items.includes(product)) items.push(product);
+  textarea.value = items.join('\n');
 }
 
 function setupModalForms() {
@@ -148,7 +190,7 @@ function allowedPages() {
 }
 
 function allowedWidgets() {
-  return Object.keys(widgetDefs).filter(w => !['settings', 'users'].includes(w) || state.user.role === 'admin');
+  return Object.keys(widgetDefs);
 }
 
 function renderNav() {
@@ -197,7 +239,8 @@ function renderDashboard() {
 
 function widgetCard(key) {
   const [title, iconName] = widgetDefs[key] || [key, 'home'];
-  const action = `<a href="?page=${key}" data-page-link="${key}">Apri pagina</a>`;
+  const pageName = pageDefs[key]?.[0] || widgetDefs[key]?.[0] || key;
+  const action = `<a href="?page=${key}" data-page-link="${key}">Vai a ${pageName}</a>`;
   return `<article class="widget" data-widget="${key}">
     <div class="widget-head">${icon(iconName)}<h3>${title}</h3></div>
     <div class="widget-body">${widgetBody(key)}</div>
@@ -226,8 +269,6 @@ function widgetBody(key) {
     const notes = state.data.notes.filter(n => !n.archived_at).slice(0, 2);
     return notes.length ? notes.map(n => `<p><strong>${esc(n.title)}</strong><br><small>${esc((n.body || '').slice(0, 70))}</small></p>`).join('') : '<p>Nessuna nota attiva.</p>';
   }
-  if (key === 'users') return `<p>${state.users.length} utenti collegati</p>`;
-  if (key === 'settings') return '<p>Preferenze famiglia e notifiche.</p>';
   return '<p>Widget disponibile.</p>';
 }
 
@@ -252,9 +293,16 @@ function renderCalendar() {
   for (let d = 1; d <= last.getDate(); d++) {
     const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const ev = state.data.events.filter(e => (e.starts_at || '').startsWith(iso));
-    html += `<div class="day"><b>${d}</b>${ev.map(e => `<span class="event-pill" title="${esc(e.created_by_name)}">${esc(e.title)} · ${esc(e.created_by_name)}</span>`).join('')}</div>`;
+    const visible = ev.slice(0, 2);
+    const hidden = ev.slice(2);
+    html += `<div class="day" data-day="${iso}"><b>${d}</b>${visible.map(eventPill).join('')}${hidden.length ? `<div class="more-events hidden">${hidden.map(eventPill).join('')}</div><button type="button" class="more-btn" data-expand-day="${iso}" data-more-count="${hidden.length}">Altri ${hidden.length}</button>` : ''}</div>`;
   }
   $('#calendarGrid').innerHTML = html;
+}
+
+function eventPill(e) {
+  const sharedOther = Number(e.shared) === 1 && Number(e.created_by) !== Number(state.user.id);
+  return `<span class="event-pill ${sharedOther ? 'shared-other' : ''}" title="${esc(e.created_by_name)}">${esc(e.title)} · ${esc(e.created_by_name)}</span>`;
 }
 
 function renderShopping() {
@@ -274,12 +322,12 @@ function renderNotes() {
 }
 
 function renderUsers() {
-  $('#usersList').innerHTML = state.users.map(u => `<article class="card"><h3>${esc(u.name)}</h3><p>${esc(u.category)} · ${esc(u.role)} · ${esc(u.phone || 'senza telefono')}</p><p>${esc(u.email || '')}</p></article>`).join('');
+  $('#usersList').innerHTML = state.users.map(u => `<article class="card"><h3>${esc(u.name)}</h3><p>${esc(labelCategory(u.category))} · ${esc(u.role)} · ${esc(u.phone || 'senza telefono')}</p><p>${esc(u.email || '')}</p></article>`).join('');
 }
 
 function renderProfile() {
   const f = $('#profileForm');
-  ['email', 'birth_date', 'theme', 'personal_info'].forEach(k => f.elements[k] && (f.elements[k].value = state.user[k] || ''));
+  ['email', 'birth_date', 'theme', 'category', 'personal_info'].forEach(k => f.elements[k] && (f.elements[k].value = state.user[k] || ''));
 }
 
 function renderNotifications() {
@@ -308,6 +356,16 @@ document.addEventListener('click', async e => {
   const close = e.target.closest('.modal-close');
   if (close) closeModal(true);
   if (e.target.id === 'modalBackdrop') closeModal(true);
+  const expandDay = e.target.closest('[data-expand-day]');
+  if (expandDay) {
+    const day = document.querySelector(`[data-day="${expandDay.dataset.expandDay}"]`);
+    day?.classList.toggle('expanded');
+    expandDay.textContent = day?.classList.contains('expanded') ? 'Mostra meno' : `Altri ${expandDay.dataset.moreCount}`;
+  }
+  const product = e.target.closest('[data-product]');
+  if (product) addShoppingProduct(product.dataset.product);
+  const cat = e.target.closest('[data-product-category]');
+  if (cat) toggleProductCategory(cat.dataset.productCategory);
   const arch = e.target.closest('[data-archive-list]');
   if (arch) {
     await api('shopping', { method: 'POST', body: JSON.stringify({ id: arch.dataset.archiveList, archive: true }) });
@@ -323,7 +381,7 @@ document.addEventListener('click', async e => {
   if (e.target.id === 'themeToggle' || e.target.closest('#themeToggle')) {
     state.user.theme = document.body.classList.contains('dark') ? 'light' : 'dark';
     applyTheme(state.user.theme);
-    await api('profile-save', { method: 'POST', body: JSON.stringify({ theme: state.user.theme, email: state.user.email, birth_date: state.user.birth_date, personal_info: state.user.personal_info }) });
+    await api('profile-save', { method: 'POST', body: JSON.stringify({ theme: state.user.theme, email: state.user.email, birth_date: state.user.birth_date, personal_info: state.user.personal_info, category: state.user.category }) });
   }
   if (e.target.id === 'notifyBtn' || e.target.closest('#notifyBtn')) {
     const body = state.data.notifications.slice(0, 6).map(n => `${n.title}: ${n.body}`).join('\n') || 'Nessuna notifica';
@@ -347,14 +405,13 @@ $('#loginForm').addEventListener('submit', async e => {
 });
 
 $('#resetRequestForm').addEventListener('submit', async e => { e.preventDefault(); await api('request-reset', { method: 'POST', body: JSON.stringify(formData(e.target)) }); toast('Controlla la tua email'); });
-$('#eventForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'calendar'); });
+$('#eventForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'calendar', d => ({ ...d, starts_at: toSqlDateTime(combineDateTime(d.starts_date, d.starts_hour, d.starts_minute)), ends_at: toSqlDateTime(combineDateTime(d.ends_date, d.ends_hour, d.ends_minute)), shared: !!d.shared })); });
 $('#shoppingForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'shopping', d => ({ ...d, shared: !!d.shared, items: (d.items || '').split('\n').filter(Boolean).map(label => ({ label, checked: false })) })); });
-$('#familyForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'family'); });
-$('#childForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'user-save', d => ({ ...d, phone: '', role: 'familiare', category: 'figlio', active: true })); });
-$('#reminderForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'reminders', d => ({ ...d, shared: !!d.shared })); });
+$('#familyForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'family', d => ({ ...d, task_time: `${d.task_hour || '00'}:${d.task_minute || '00'}` })); });
+$('#reminderForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'reminders', d => ({ ...d, due_at: toSqlDateTime(combineDateTime(d.due_date, d.due_hour, d.due_minute)), shared: !!d.shared })); });
 $('#noteForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'notes', d => ({ ...d, archived: !!d.archived })); });
 $('#profileForm').addEventListener('submit', async e => { e.preventDefault(); const r = await api('profile-save', { method: 'POST', body: JSON.stringify(formData(e.target)) }); state.user = r.user; applyTheme(state.user.theme); closeModal(false); await loadAll(); toast('Profilo aggiornato'); });
-$('#settingsForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'settings', d => ({ settings: d })); });
+$('#settingsForm').addEventListener('submit', async e => { e.preventDefault(); await api('settings', { method: 'POST', body: JSON.stringify({ settings: formData(e.target) }) }); toast('Impostazioni aggiornate'); });
 $('#userForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'user-save', d => ({ ...d, active: !!d.active })); });
 $('#widgetForm').addEventListener('submit', async e => {
   e.preventDefault();

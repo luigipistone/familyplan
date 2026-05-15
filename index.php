@@ -72,9 +72,11 @@ $assetVersion = substr(hash('sha256', (string) max(
         <div id="calendarGrid" class="calendar-grid"></div>
         <form id="eventForm" class="card form-card modal-form hidden" data-modal-title="Nuovo evento">
           <input name="title" placeholder="Titolo evento" required>
-          <input name="starts_at" type="datetime-local" required>
-          <input name="ends_at" type="datetime-local">
-          <select name="child_id" data-users="children"><option value="">Nessun figlio</option></select>
+          <input type="hidden" name="starts_at">
+          <input type="hidden" name="ends_at">
+          <div class="soft-picker" data-picker="starts_at"><span>Inizio</span><input name="starts_date" inputmode="numeric" placeholder="AAAA-MM-GG" required><select name="starts_hour"></select><select name="starts_minute"></select></div>
+          <div class="soft-picker" data-picker="ends_at"><span>Fine</span><input name="ends_date" inputmode="numeric" placeholder="AAAA-MM-GG"><select name="ends_hour"></select><select name="ends_minute"></select></div>
+          <label class="check"><input name="shared" type="checkbox"> condividi con la famiglia</label>
           <textarea name="description" placeholder="Dettagli"></textarea>
           <button>Salva evento</button>
         </form>
@@ -84,32 +86,25 @@ $assetVersion = substr(hash('sha256', (string) max(
         <div class="section-title"><h2>Lista spesa</h2><button data-open="shoppingForm"><span data-icon="plus"></span> Lista</button></div>
         <form id="shoppingForm" class="card form-card modal-form hidden" data-modal-title="Nuova lista spesa">
           <input name="title" placeholder="Nome lista" value="Spesa">
-          <input name="list_date" type="date">
+          <input name="list_date" inputmode="numeric" placeholder="Data lista AAAA-MM-GG">
           <label class="check"><input name="shared" type="checkbox"> condivisa con la famiglia</label>
-          <textarea name="items" placeholder="Un prodotto per riga"></textarea>
+          <div id="productCatalog" class="product-catalog" aria-label="Categorie prodotti"></div>
+          <textarea name="items" placeholder="Prodotti selezionati o scritti, uno per riga"></textarea>
           <button>Salva lista</button>
         </form>
         <div id="shoppingLists" class="cards"></div>
       </section>
 
       <section class="page" data-page="family">
-        <div class="section-title"><h2>Famiglia e figli</h2><div class="actions-row"><button data-open="childForm"><span data-icon="plus"></span> Figlio</button><button data-open="familyForm"><span data-icon="plus"></span> Impegno</button></div></div>
-        <form id="childForm" class="card form-card modal-form hidden" data-modal-title="Nuovo utente figlio">
-          <input name="name" placeholder="Nome figlio" required>
-          <input name="birth_date" type="date" required>
-          <input name="email" type="email" placeholder="Email opzionale">
-          <select name="parent_id" data-users="parents"><option value="">Genitore associato</option></select>
-          <textarea name="personal_info" placeholder="Informazioni gestibili dal genitore"></textarea>
-          <input type="hidden" name="role" value="familiare">
-          <input type="hidden" name="category" value="figlio">
-          <button>Salva utente figlio</button>
-        </form>
+        <div class="section-title"><h2>Famiglia e figli</h2><div class="actions-row"><button data-open="familyForm"><span data-icon="plus"></span> Impegno</button></div></div>
         <form id="familyForm" class="card form-card modal-form hidden" data-modal-title="Nuovo impegno figli">
           <select name="child_id" data-users="children" required></select>
           <select name="assignee_id" data-users="all"><option value="">Da assegnare</option></select>
-          <input name="task_date" type="date" required>
-          <input name="task_time" type="time">
+          <div class="soft-picker" data-picker="task"><span>Data e ora</span><input name="task_date" inputmode="numeric" placeholder="AAAA-MM-GG" required><select name="task_hour"></select><select name="task_minute"></select></div>
+          <input type="hidden" name="task_time">
           <input name="type" placeholder="Es. accompagna all'asilo">
+          <select name="recurrence"><option value="none">Non ricorrente</option><option value="daily">Giornaliero</option><option value="weekly">Settimanale</option><option value="monthly">Mensile</option></select>
+          <input name="recurrence_count" type="number" min="1" max="52" value="1" placeholder="Numero occorrenze">
           <textarea name="notes" placeholder="Note"></textarea>
           <button>Salva impegno</button>
         </form>
@@ -120,7 +115,8 @@ $assetVersion = substr(hash('sha256', (string) max(
         <div class="section-title"><h2>Promemoria</h2><button data-open="reminderForm"><span data-icon="plus"></span> Promemoria</button></div>
         <form id="reminderForm" class="card form-card modal-form hidden" data-modal-title="Nuovo promemoria">
           <input name="title" placeholder="Promemoria" required>
-          <input name="due_at" type="datetime-local">
+          <input type="hidden" name="due_at">
+          <div class="soft-picker" data-picker="due_at"><span>Scadenza</span><input name="due_date" inputmode="numeric" placeholder="AAAA-MM-GG"><select name="due_hour"></select><select name="due_minute"></select></div>
           <select name="recurrence"><option value="none">Non ricorrente</option><option value="daily">Giornaliero</option><option value="weekly">Settimanale</option><option value="monthly">Mensile</option></select>
           <label class="check"><input name="shared" type="checkbox"> condiviso</label>
           <button>Salva promemoria</button>
@@ -140,8 +136,8 @@ $assetVersion = substr(hash('sha256', (string) max(
       </section>
 
       <section class="page admin-only" data-page="settings">
-        <div class="section-title"><h2>Impostazioni</h2><button data-open="settingsForm"><span data-icon="edit"></span> Modifica</button></div>
-        <form id="settingsForm" class="card form-card modal-form hidden" data-modal-title="Impostazioni famiglia">
+        <div class="section-title"><h2>Impostazioni</h2></div>
+        <form id="settingsForm" class="card form-card">
           <label>Nome famiglia<input name="family_name" placeholder="Casa Rossi"></label>
           <label>Archivio automatico spesa (giorni)<input name="shopping_archive_days" type="number" value="7"></label>
           <label>Notifiche silenziose dalle<input name="quiet_hours" placeholder="22:00-07:00"></label>
@@ -153,13 +149,14 @@ $assetVersion = substr(hash('sha256', (string) max(
         <div class="section-title"><h2>Utenti</h2><button data-open="userForm"><span data-icon="plus"></span> Utente</button></div>
         <form id="userForm" class="card form-card modal-form hidden" data-modal-title="Nuovo utente">
           <input name="name" placeholder="Nome" required>
-          <input name="phone" placeholder="Telefono (obbligatorio tranne figli)">
+          <input name="phone" placeholder="Telefono (obbligatorio per adulti e figli dai 14 anni)">
           <input name="email" type="email" placeholder="Email">
-          <input name="birth_date" type="date">
+          <input name="birth_date" inputmode="numeric" placeholder="Data nascita AAAA-MM-GG">
           <input name="password" type="password" placeholder="Password iniziale (opzionale per figli)">
           <select name="role"><option value="familiare">Familiare</option><option value="admin">Admin</option></select>
-          <select name="category"><option>mamma</option><option>papà</option><option>figlio</option><option>nonno</option><option>zia</option><option>familiare</option></select>
-          <select name="parent_id" data-users="parents"><option value="">Genitore associato se figlio</option></select>
+          <select name="category"><option value="mamma">Mamma</option><option value="papà">Papà</option><option value="figlio">Figlio</option><option value="nonno">Nonno</option><option value="nonna">Nonna</option><option value="zio">Zio</option><option value="zia">Zia</option><option value="familiare">Familiare</option></select>
+          <select name="parent_id" data-users="parents"><option value="">Mamma/Papà 1 se figlio minore di 14</option></select>
+          <select name="second_parent_id" data-users="parents"><option value="">Mamma/Papà 2 se figlio minore di 14</option></select>
           <textarea name="personal_info" placeholder="Info personali"></textarea>
           <label class="check"><input name="active" type="checkbox" checked> attivo</label>
           <button>Salva utente</button>
@@ -169,7 +166,8 @@ $assetVersion = substr(hash('sha256', (string) max(
 
       <form id="profileForm" class="card form-card modal-form hidden" data-modal-title="Profilo personale">
         <input name="email" type="email" placeholder="Email">
-        <input name="birth_date" type="date">
+        <input name="birth_date" inputmode="numeric" placeholder="Data nascita AAAA-MM-GG">
+        <select name="category"><option value="mamma">Mamma</option><option value="papà">Papà</option><option value="figlio">Figlio</option><option value="nonno">Nonno</option><option value="nonna">Nonna</option><option value="zio">Zio</option><option value="zia">Zia</option><option value="familiare">Familiare</option></select>
         <select name="theme"><option value="system">Tema sistema</option><option value="light">Chiaro</option><option value="dark">Scuro</option></select>
         <textarea name="personal_info" placeholder="Informazioni personali"></textarea>
         <button>Aggiorna profilo</button>

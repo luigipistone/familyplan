@@ -91,7 +91,7 @@ function current_user(): ?array
     if (empty($_SESSION['user_id'])) {
         return null;
     }
-    $stmt = db()->prepare('SELECT id, name, phone, email, birth_date, role, category, parent_id, personal_info, theme, created_at FROM users WHERE id = ? AND active = 1');
+    $stmt = db()->prepare('SELECT id, name, phone, email, birth_date, role, category, parent_id, second_parent_id, personal_info, theme, created_at FROM users WHERE id = ? AND active = 1');
     $stmt->execute([$_SESSION['user_id']]);
     return $stmt->fetch() ?: null;
 }

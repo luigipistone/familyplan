@@ -9,14 +9,16 @@ CREATE TABLE users (
   birth_date DATE NULL,
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('admin','familiare') NOT NULL DEFAULT 'familiare',
-  category ENUM('nonno','zia','papà','mamma','figlio','familiare') NOT NULL DEFAULT 'familiare',
+  category ENUM('nonno','nonna','zio','zia','papà','mamma','figlio','familiare') NOT NULL DEFAULT 'familiare',
   parent_id INT UNSIGNED NULL,
+  second_parent_id INT UNSIGNED NULL,
   personal_info TEXT NULL,
   theme ENUM('light','dark','system') NOT NULL DEFAULT 'system',
   active TINYINT(1) NOT NULL DEFAULT 1,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_users_parent FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT fk_users_second_parent FOREIGN KEY (second_parent_id) REFERENCES users(id) ON DELETE SET NULL,
   INDEX idx_users_role (role),
   INDEX idx_users_category (category)
 ) ENGINE=InnoDB;
@@ -48,12 +50,12 @@ CREATE TABLE events (
   description TEXT NULL,
   starts_at DATETIME NOT NULL,
   ends_at DATETIME NULL,
-  child_id INT UNSIGNED NULL,
+  shared TINYINT(1) NOT NULL DEFAULT 0,
   created_by INT UNSIGNED NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_events_child FOREIGN KEY (child_id) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_events_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
-  INDEX idx_events_starts (starts_at)
+  INDEX idx_events_starts (starts_at),
+  INDEX idx_events_visibility (created_by, shared)
 ) ENGINE=InnoDB;
 
 CREATE TABLE shopping_lists (
@@ -86,6 +88,8 @@ CREATE TABLE family_tasks (
   task_time TIME NULL,
   type VARCHAR(80) NOT NULL,
   notes TEXT NULL,
+  recurrence ENUM('none','daily','weekly','monthly') NOT NULL DEFAULT 'none',
+  recurrence_group VARCHAR(36) NULL,
   created_by INT UNSIGNED NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_tasks_child FOREIGN KEY (child_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -146,7 +150,7 @@ INSERT IGNORE INTO dashboard_widgets (user_id, widget_key, enabled, sort_order)
 SELECT id, widget_key, 1, sort_order FROM users
 JOIN (
   SELECT 'calendar' widget_key, 0 sort_order UNION ALL SELECT 'shopping', 1 UNION ALL SELECT 'family', 2 UNION ALL
-  SELECT 'reminders', 3 UNION ALL SELECT 'notes', 4 UNION ALL SELECT 'profile', 5 UNION ALL SELECT 'settings', 6 UNION ALL SELECT 'users', 7
+  SELECT 'reminders', 3 UNION ALL SELECT 'notes', 4
 ) defaults WHERE phone='3497591581';
 
 INSERT INTO app_settings (setting_key, setting_value) VALUES

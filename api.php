@@ -134,7 +134,7 @@ function users(string $method): void
 {
     $user = require_user();
     if ($method !== 'GET') json_response(['ok' => false], 405);
-    $sql = 'SELECT id, name, phone, email, birth_date, role, category, parent_id, personal_info, active FROM users ORDER BY category, name';
+    $sql = 'SELECT id, name, phone, email, birth_date, role, category, parent_id, second_parent_id, personal_info, active FROM users ORDER BY category, name';
     json_response(['ok' => true, 'users' => db()->query($sql)->fetchAll(), 'canAdmin' => $user['role'] === 'admin']);
 }
 
@@ -152,17 +152,19 @@ function user_save(string $method): void
     $phone = clean_string($d['phone'] ?? '', 30);
     $email = clean_string($d['email'] ?? '', 190);
     $category = clean_string($d['category'] ?? 'familiare', 30);
-    if (!in_array($category, ['nonno', 'zia', 'papà', 'mamma', 'figlio', 'familiare'], true)) {
+    if (!in_array($category, ['nonno', 'nonna', 'zio', 'zia', 'papà', 'mamma', 'figlio', 'familiare'], true)) {
         $category = 'familiare';
     }
     $role = in_array(($d['role'] ?? 'familiare'), ['admin', 'familiare'], true) ? $d['role'] : 'familiare';
     $parentId = !empty($d['parent_id']) ? (int) $d['parent_id'] : null;
+    $secondParentId = !empty($d['second_parent_id']) ? (int) $d['second_parent_id'] : null;
 
     if (!$isAdmin) {
         $category = 'figlio';
         $role = 'familiare';
         $phone = '';
         $parentId = (int) $actor['id'];
+        $secondParentId = !empty($d['second_parent_id']) ? (int) $d['second_parent_id'] : null;
         if ($id > 0) {
             $stmt = db()->prepare("SELECT id, birth_date FROM users WHERE id=? AND category='figlio' AND parent_id=?");
             $stmt->execute([$id, $actor['id']]);
@@ -179,23 +181,29 @@ function user_save(string $method): void
     }
 
     if ($name === '') json_response(['ok' => false, 'error' => 'Nome richiesto.'], 422);
-    if ($category !== 'figlio' && $phone === '') json_response(['ok' => false, 'error' => 'Telefono richiesto per gli adulti.'], 422);
-    if ($category === 'figlio' && $parentId) {
-        $stmt = db()->prepare("SELECT id FROM users WHERE id = ? AND category IN ('mamma', 'papà') AND active = 1");
-        $stmt->execute([$parentId]);
-        if (!$stmt->fetch()) json_response(['ok' => false, 'error' => 'Genitore associato non valido.'], 422);
+    if ($category === 'figlio') {
+        $age = !empty($d['birth_date']) ? (int) (new DateTime($d['birth_date']))->diff(new DateTime('today'))->y : 0;
+        if ($age >= 14 && $phone === '') json_response(['ok' => false, 'error' => 'Telefono richiesto per figli dai 14 anni in su.'], 422);
+        if ($age < 14 && (!$parentId || !$secondParentId)) json_response(['ok' => false, 'error' => 'Per figli minori di 14 anni seleziona mamma e papà.'], 422);
+        foreach (array_filter([$parentId, $secondParentId]) as $pid) {
+            $stmt = db()->prepare("SELECT id FROM users WHERE id = ? AND category IN ('mamma', 'papà') AND active = 1");
+            $stmt->execute([$pid]);
+            if (!$stmt->fetch()) json_response(['ok' => false, 'error' => 'Genitore associato non valido.'], 422);
+        }
+    } elseif ($phone === '') {
+        json_response(['ok' => false, 'error' => 'Telefono richiesto per gli adulti.'], 422);
     }
     if ($id > 0) {
-        db()->prepare('UPDATE users SET name=?, phone=?, email=?, birth_date=?, role=?, category=?, parent_id=?, personal_info=?, active=? WHERE id=?')
-            ->execute([$name, $phone ?: null, $email ?: null, ($d['birth_date'] ?? null) ?: null, $role, $category, $parentId, clean_string($d['personal_info'] ?? '', 1000), !empty($d['active']) || !$isAdmin ? 1 : 0, $id]);
+        db()->prepare('UPDATE users SET name=?, phone=?, email=?, birth_date=?, role=?, category=?, parent_id=?, second_parent_id=?, personal_info=?, active=? WHERE id=?')
+            ->execute([$name, $phone ?: null, $email ?: null, ($d['birth_date'] ?? null) ?: null, $role, $category, $parentId, $secondParentId, clean_string($d['personal_info'] ?? '', 1000), !empty($d['active']) || !$isAdmin ? 1 : 0, $id]);
     } else {
         $password = (string) ($d['password'] ?? '');
         if ($password === '') {
             $password = bin2hex(random_bytes(12));
         }
         if ($isAdmin && $category !== 'figlio' && strlen($password) < 10) json_response(['ok' => false, 'error' => 'Password iniziale di almeno 10 caratteri per gli adulti.'], 422);
-        db()->prepare('INSERT INTO users (name, phone, email, birth_date, password_hash, role, category, parent_id, personal_info, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)')
-            ->execute([$name, $phone ?: null, $email ?: null, ($d['birth_date'] ?? null) ?: null, password_hash($password, PASSWORD_DEFAULT), $role, $category, $parentId, clean_string($d['personal_info'] ?? '', 1000)]);
+        db()->prepare('INSERT INTO users (name, phone, email, birth_date, password_hash, role, category, parent_id, second_parent_id, personal_info, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)')
+            ->execute([$name, $phone ?: null, $email ?: null, ($d['birth_date'] ?? null) ?: null, password_hash($password, PASSWORD_DEFAULT), $role, $category, $parentId, $secondParentId, clean_string($d['personal_info'] ?? '', 1000)]);
         $id = (int) db()->lastInsertId();
         seed_widgets($id, $role);
     }
@@ -208,8 +216,12 @@ function profile_save(string $method): void
     $user = require_user();
     if ($method !== 'POST') json_response(['ok' => false], 405);
     $d = request_json();
-    db()->prepare('UPDATE users SET email=?, birth_date=?, personal_info=?, theme=? WHERE id=?')
-        ->execute([clean_string($d['email'] ?? '', 190), ($d['birth_date'] ?? null) ?: null, clean_string($d['personal_info'] ?? '', 1000), in_array(($d['theme'] ?? 'system'), ['light', 'dark', 'system'], true) ? $d['theme'] : 'system', $user['id']]);
+    $category = clean_string($d['category'] ?? $user['category'], 30);
+    if (!in_array($category, ['nonno', 'nonna', 'zio', 'zia', 'papà', 'mamma', 'figlio', 'familiare'], true)) {
+        $category = $user['category'];
+    }
+    db()->prepare('UPDATE users SET email=?, birth_date=?, personal_info=?, theme=?, category=? WHERE id=?')
+        ->execute([clean_string($d['email'] ?? '', 190), ($d['birth_date'] ?? null) ?: null, clean_string($d['personal_info'] ?? '', 1000), in_array(($d['theme'] ?? 'system'), ['light', 'dark', 'system'], true) ? $d['theme'] : 'system', $category, $user['id']]);
     json_response(['ok' => true, 'user' => current_user()]);
 }
 
@@ -219,15 +231,16 @@ function calendar(string $method): void
     if ($method === 'GET') {
         $start = $_GET['start'] ?? date('Y-m-01');
         $end = $_GET['end'] ?? date('Y-m-t');
-        $stmt = db()->prepare('SELECT e.*, u.name AS created_by_name FROM events e JOIN users u ON u.id=e.created_by WHERE e.starts_at BETWEEN ? AND ? ORDER BY e.starts_at');
-        $stmt->execute([$start . ' 00:00:00', $end . ' 23:59:59']);
+        $stmt = db()->prepare('SELECT e.*, u.name AS created_by_name FROM events e JOIN users u ON u.id=e.created_by WHERE e.starts_at BETWEEN ? AND ? AND (e.created_by = ? OR e.shared = 1) ORDER BY e.starts_at');
+        $stmt->execute([$start . ' 00:00:00', $end . ' 23:59:59', $user['id']]);
         json_response(['ok' => true, 'events' => $stmt->fetchAll()]);
     }
     if ($method === 'POST') {
         $d = request_json();
-        db()->prepare('INSERT INTO events (title, description, starts_at, ends_at, child_id, created_by) VALUES (?, ?, ?, ?, ?, ?)')
-            ->execute([clean_string($d['title'] ?? '', 160), clean_string($d['description'] ?? '', 1000), ($d['starts_at'] ?? ''), ($d['ends_at'] ?? null) ?: null, !empty($d['child_id']) ? (int) $d['child_id'] : null, $user['id']]);
-        notify_users(all_user_ids(), 'calendar', 'Nuovo evento', $user['name'] . ' ha creato un evento.', (int) $user['id']);
+        $shared = !empty($d['shared']) ? 1 : 0;
+        db()->prepare('INSERT INTO events (title, description, starts_at, ends_at, shared, created_by) VALUES (?, ?, ?, ?, ?, ?)')
+            ->execute([clean_string($d['title'] ?? '', 160), clean_string($d['description'] ?? '', 1000), ($d['starts_at'] ?? ''), ($d['ends_at'] ?? null) ?: null, $shared, $user['id']]);
+        notify_users($shared ? all_user_ids() : [$user['id']], 'calendar', 'Nuovo evento', $user['name'] . ' ha creato un evento' . ($shared ? ' condiviso.' : '.'), (int) $user['id']);
         json_response(['ok' => true]);
     }
     json_response(['ok' => false], 405);
@@ -285,10 +298,20 @@ function family_day(string $method): void
     }
     if ($method === 'POST') {
         $d = request_json();
-        db()->prepare('INSERT INTO family_tasks (child_id, assignee_id, task_date, task_time, type, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)')
-            ->execute([(int) $d['child_id'], !empty($d['assignee_id']) ? (int) $d['assignee_id'] : null, ($d['task_date'] ?? date('Y-m-d')), ($d['task_time'] ?? null) ?: null, clean_string($d['type'] ?? 'impegno', 80), clean_string($d['notes'] ?? '', 1000), $user['id']]);
-        notify_users(all_user_ids(), 'family', 'Impegno figli', $user['name'] . ' ha aggiunto un impegno figli.', (int) $user['id']);
-        json_response(['ok' => true]);
+        $recurrence = in_array(($d['recurrence'] ?? 'none'), ['none', 'daily', 'weekly', 'monthly'], true) ? $d['recurrence'] : 'none';
+        $count = max(1, min(52, (int) ($d['recurrence_count'] ?? 1)));
+        if ($recurrence === 'none') $count = 1;
+        $group = $count > 1 ? bin2hex(random_bytes(16)) : null;
+        $date = new DateTime($d['task_date'] ?? date('Y-m-d'));
+        $stmt = db()->prepare('INSERT INTO family_tasks (child_id, assignee_id, task_date, task_time, type, notes, recurrence, recurrence_group, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        for ($i = 0; $i < $count; $i++) {
+            if ($i > 0) {
+                $date->modify($recurrence === 'daily' ? '+1 day' : ($recurrence === 'weekly' ? '+1 week' : '+1 month'));
+            }
+            $stmt->execute([(int) $d['child_id'], !empty($d['assignee_id']) ? (int) $d['assignee_id'] : null, $date->format('Y-m-d'), ($d['task_time'] ?? null) ?: null, clean_string($d['type'] ?? 'impegno', 80), clean_string($d['notes'] ?? '', 1000), $recurrence, $group, $user['id']]);
+        }
+        notify_users(all_user_ids(), 'family', 'Impegno figli', $user['name'] . ' ha aggiunto ' . $count . ' impegno/i figli.', (int) $user['id']);
+        json_response(['ok' => true, 'created' => $count]);
     }
     json_response(['ok' => false], 405);
 }
