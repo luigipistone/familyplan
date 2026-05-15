@@ -40,3 +40,4 @@ Cambia la password dopo il primo accesso in un ambiente reale.
 - Mantieni `config.local.php` fuori dal repository e limita i permessi del file.
 - Configura SMTP affidabile per il recupero password; `mail()`/log locale è solo un fallback semplice.
 - Per notifiche push complete serve aggiungere una coppia VAPID e salvare le subscription browser; il service worker è già predisposto a mostrare push ricevuti.
+- Se dopo un deploy il browser mostra ancora una versione vecchia, apri una volta `/sw.js` o ricarica la pagina: il service worker ora usa `network-first`, asset versionati e header no-cache per aggiornarsi senza dover usare la navigazione in incognito.

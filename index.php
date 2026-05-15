@@ -1,6 +1,14 @@
 <?php
 require __DIR__ . '/src/bootstrap.php';
 start_secure_session();
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+$assetVersion = substr(hash('sha256', (string) max(
+    filemtime(__DIR__ . '/assets/styles.css'),
+    filemtime(__DIR__ . '/assets/app.js'),
+    filemtime(__DIR__ . '/manifest.webmanifest'),
+    filemtime(__DIR__ . '/sw.js')
+)), 0, 12);
 ?>
 <!doctype html>
 <html lang="it">
@@ -9,8 +17,8 @@ start_secure_session();
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#8fb9aa">
   <title>FamilyPlan</title>
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/assets/styles.css">
+  <link rel="manifest" href="/manifest.webmanifest?v=<?= $assetVersion ?>">
+  <link rel="stylesheet" href="/assets/styles.css?v=<?= $assetVersion ?>">
 </head>
 <body>
   <div id="app" class="app-shell">
@@ -177,6 +185,6 @@ start_secure_session();
     <div id="toast" class="toast" role="status"></div>
   </div>
   <script>window.FP_CSRF = <?= json_encode($_SESSION['csrf_token']) ?>;</script>
-  <script src="/assets/app.js" defer></script>
+  <script src="/assets/app.js?v=<?= $assetVersion ?>" defer></script>
 </body>
 </html>

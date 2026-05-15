@@ -117,7 +117,26 @@ async function showApp() {
   renderNav();
   await loadAll();
   navigateTo(new URLSearchParams(location.search).get('page') || 'dashboard', false);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+      .then(registration => {
+        registration.update().catch(() => {});
+        if (registration.waiting) registration.waiting.postMessage('SKIP_WAITING');
+        registration.addEventListener('updatefound', () => {
+          const worker = registration.installing;
+          worker?.addEventListener('statechange', () => {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) worker.postMessage('SKIP_WAITING');
+          });
+        });
+      })
+      .catch(() => {});
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!sessionStorage.getItem('familyplan-sw-reloaded')) {
+        sessionStorage.setItem('familyplan-sw-reloaded', '1');
+        location.reload();
+      }
+    });
+  }
 }
 
 function applyTheme(theme) {
