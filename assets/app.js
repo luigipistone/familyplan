@@ -44,12 +44,13 @@ const today = () => new Date().toISOString().slice(0, 10);
 const icon = name => `<span class="line-icon" aria-hidden="true">${icons[name] || icons.home}</span>`;
 const categoryLabels = { mamma: 'Mamma', 'papà': 'Papà', figlio: 'Figlio', nonno: 'Nonno', nonna: 'Nonna', zio: 'Zio', zia: 'Zia', familiare: 'Familiare' };
 const productCategories = {
-  'Frutta e Verdura': ['Mele', 'Banane', 'Insalata', 'Pomodori', 'Carote', 'Zucchine'],
-  'Pane e Pasta': ['Pane', 'Pasta', 'Riso', 'Farina', 'Cracker'],
-  'Latte e Freschi': ['Latte', 'Yogurt', 'Mozzarella', 'Uova', 'Burro'],
-  'Carne e Pesce': ['Pollo', 'Tacchino', 'Manzo', 'Salmone', 'Tonno'],
-  'Detersivi': ['Detersivo lavatrice', 'Ammorbidente', 'Sapone piatti', 'Sgrassatore', 'Carta casa'],
-  'Dispensa': ['Olio', 'Sale', 'Zucchero', 'Caffè', 'Biscotti'],
+  'Frutta e Verdura': ['Mele', 'Pere', 'Banane', 'Arance', 'Limoni', 'Insalata', 'Pomodori', 'Carote', 'Zucchine', 'Patate', 'Cipolle', 'Spinaci'],
+  'Pane e Pasta': ['Pane', 'Pancarrè', 'Pasta', 'Riso', 'Farina', 'Cracker', 'Grissini', 'Cous cous', 'Piadine'],
+  'Latte e Freschi': ['Latte', 'Yogurt', 'Mozzarella', 'Uova', 'Burro', 'Formaggio', 'Ricotta', 'Prosciutto', 'Stracchino'],
+  'Carne e Pesce': ['Pollo', 'Tacchino', 'Manzo', 'Salsicce', 'Salmone', 'Tonno', 'Merluzzo', 'Gamberi', 'Hamburger'],
+  'Detersivi': ['Detersivo lavatrice', 'Ammorbidente', 'Sapone piatti', 'Sgrassatore', 'Carta casa', 'Candeggina', 'Panni microfibra', 'Spugne', 'Sacchi immondizia'],
+  'Dispensa': ['Olio', 'Sale', 'Zucchero', 'Caffè', 'Biscotti', 'Cereali', 'Passata', 'Legumi', 'Tonno scatola', 'Marmellata', 'Miele', 'Tè'],
+  'Igiene': ['Shampoo', 'Bagnoschiuma', 'Dentifricio', 'Carta igienica', 'Sapone mani', 'Deodorante', 'Salviette', 'Pannolini', 'Crema'],
 };
 
 async function api(action, opts = {}) {
@@ -71,6 +72,7 @@ function formData(form) { return Object.fromEntries(new FormData(form).entries()
 function labelCategory(value) { return categoryLabels[value] || (value ? value.charAt(0).toUpperCase() + value.slice(1) : ''); }
 function optionRange(max, step = 1) { return Array.from({ length: Math.ceil(max / step) }, (_, i) => String(i * step).padStart(2, '0')).map(v => `<option value="${v}">${v}</option>`).join(''); }
 function combineDateTime(date, hour, minute) { return date ? `${date}T${hour || '00'}:${minute || '00'}` : ''; }
+function formatDate(value) { if (!value) return ''; const [y, m, d] = String(value).slice(0, 10).split('-'); return y && m && d ? `${d}/${m}/${y}` : value; }
 function toSqlDateTime(value) { return value ? value.replace('T', ' ') + ':00' : ''; }
 
 async function boot() {
@@ -78,6 +80,7 @@ async function boot() {
   setupModalForms();
   setupSoftPickers();
   renderProductCatalog();
+  setupConditionalFields();
   try {
     const s = await api('session');
     state.user = s.user;
@@ -119,6 +122,29 @@ function addShoppingProduct(product) {
   const items = textarea.value.split('\n').map(v => v.trim()).filter(Boolean);
   if (!items.includes(product)) items.push(product);
   textarea.value = items.join('\n');
+}
+
+
+function setupConditionalFields() {
+  const userForm = $('#userForm');
+  const category = userForm?.elements.category;
+  const parentFields = userForm?.querySelector('.parent-fields');
+  const updateParents = () => parentFields?.classList.toggle('hidden', category?.value !== 'figlio');
+  if (category && !category.dataset.conditionalReady) {
+    category.addEventListener('change', updateParents);
+    category.dataset.conditionalReady = '1';
+  }
+  updateParents();
+
+  const familyForm = $('#familyForm');
+  const recurrence = familyForm?.elements.recurrence;
+  const count = familyForm?.elements.recurrence_count;
+  const updateRecurrence = () => count?.classList.toggle('hidden', recurrence?.value === 'none');
+  if (recurrence && !recurrence.dataset.conditionalReady) {
+    recurrence.addEventListener('change', updateRecurrence);
+    recurrence.dataset.conditionalReady = '1';
+  }
+  updateRecurrence();
 }
 
 function setupModalForms() {
@@ -252,7 +278,7 @@ function widgetBody(key) {
   const todayIso = today();
   if (key === 'calendar') {
     const events = state.data.events.filter(e => (e.starts_at || '').startsWith(todayIso));
-    return events.length ? events.slice(0, 3).map(e => `<p><strong>${esc(e.title)}</strong><br><small>${esc(e.starts_at?.slice(11, 16))} · inserito da ${esc(e.created_by_name)}</small></p>`).join('') : '<p>Nessun evento oggi.</p>';
+    return events.length ? events.slice(0, 3).map(e => `<p><strong>${esc(e.title)}</strong><br><small>${esc(formatDate(e.starts_at))} ${esc(e.starts_at?.slice(11, 16))} · inserito da ${esc(e.created_by_name)}</small></p>`).join('') : '<p>Nessun evento oggi.</p>';
   }
   if (key === 'shopping') {
     const list = state.data.shopping.find(l => l.list_date === todayIso && !l.archived_at);
@@ -306,15 +332,15 @@ function eventPill(e) {
 }
 
 function renderShopping() {
-  $('#shoppingLists').innerHTML = state.data.shopping.map(l => `<article class="card"><h3>${esc(l.title)}</h3><p>${esc(l.list_date)} · ${l.shared == 1 ? 'condivisa' : 'privata'} · ${l.archived_at ? 'archiviata' : 'attiva'}</p>${(l.items || []).map(i => `<div class="item-row ${i.checked == 1 ? 'done' : ''}"><input type="checkbox" ${i.checked == 1 ? 'checked' : ''} disabled>${esc(i.label)}</div>`).join('')}<button data-archive-list="${l.id}">Archivia</button></article>`).join('');
+  $('#shoppingLists').innerHTML = state.data.shopping.map(l => `<article class="card"><h3>${esc(l.title)}</h3><p>${esc(formatDate(l.list_date))} · ${l.shared == 1 ? 'condivisa' : 'privata'} · ${l.archived_at ? 'archiviata' : 'attiva'}</p>${(l.items || []).map(i => `<div class="item-row ${i.checked == 1 ? 'done' : ''}"><input type="checkbox" ${i.checked == 1 ? 'checked' : ''} disabled>${esc(i.label)}</div>`).join('')}<button data-archive-list="${l.id}">Archivia</button></article>`).join('');
 }
 
 function renderFamily() {
-  $('#familyTasks').innerHTML = state.data.family.map(t => `<article class="card"><h3>${esc(t.child_name)} · ${esc(t.type)}</h3><p>${esc(t.task_date)} ${esc(t.task_time || '')} · ${esc(t.assignee_name || 'da assegnare')}</p><p>${esc(t.notes)}</p></article>`).join('') || '<p>Nessun impegno figli oggi.</p>';
+  $('#familyTasks').innerHTML = state.data.family.map(t => `<article class="card"><h3>${esc(t.child_name)} · ${esc(t.type)}</h3><p>${esc(formatDate(t.task_date))} ${esc(t.task_time || '')} · ${esc(t.assignee_name || 'da assegnare')}</p><p>${esc(t.notes)}</p></article>`).join('') || '<p>Nessun impegno figli oggi.</p>';
 }
 
 function renderReminders() {
-  $('#remindersList').innerHTML = state.data.reminders.map(r => `<article class="card"><h3>${esc(r.title)}</h3><p>${esc(r.due_at || 'senza data')} · ${esc(r.recurrence)} · ${r.shared == 1 ? 'condiviso' : 'privato'}</p></article>`).join('');
+  $('#remindersList').innerHTML = state.data.reminders.map(r => `<article class="card"><h3>${esc(r.title)}</h3><p>${esc(r.due_at ? `${formatDate(r.due_at)} ${r.due_at.slice(11, 16)}` : 'senza data')} · ${esc(r.recurrence)} · ${r.shared == 1 ? 'condiviso' : 'privato'}</p></article>`).join('');
 }
 
 function renderNotes() {
@@ -352,7 +378,7 @@ document.addEventListener('click', async e => {
     return;
   }
   const open = e.target.closest('[data-open]');
-  if (open) openModal(open.dataset.open);
+  if (open) { openModal(open.dataset.open); setupConditionalFields(); }
   const close = e.target.closest('.modal-close');
   if (close) closeModal(true);
   if (e.target.id === 'modalBackdrop') closeModal(true);
