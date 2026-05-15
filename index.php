@@ -15,7 +15,7 @@ start_secure_session();
 <body>
   <div id="app" class="app-shell">
     <section id="auth" class="auth-card">
-      <div class="brand-mark">FP</div>
+      <div class="brand-mark" aria-hidden="true">FP</div>
       <h1>FamilyPlan</h1>
       <p>Calendario, figli, spesa e promemoria per una famiglia organizzata.</p>
       <form id="loginForm" class="stack">
@@ -35,21 +35,30 @@ start_secure_session();
     <main id="main" class="hidden">
       <header class="topbar">
         <div>
-          <span class="eyebrow">Benvenuto</span>
+          <span class="eyebrow" id="pageEyebrow">Dashboard</span>
           <h1 id="hello">FamilyPlan</h1>
         </div>
         <div class="top-actions">
-          <button id="notifyBtn" class="icon-btn" title="Notifiche">🔔<span id="notifBadge"></span></button>
-          <button id="themeToggle" class="icon-btn" title="Tema">🌗</button>
-          <button id="logoutBtn" class="icon-btn" title="Esci">↪</button>
+          <button id="notifyBtn" class="icon-btn" title="Notifiche" aria-label="Notifiche"><span data-icon="bell"></span><span id="notifBadge"></span></button>
+          <button id="themeToggle" class="icon-btn" title="Tema" aria-label="Tema"><span data-icon="moon"></span></button>
+          <button id="logoutBtn" class="icon-btn" title="Esci" aria-label="Esci"><span data-icon="logout"></span></button>
         </div>
       </header>
 
-      <section id="dashboard" class="dashboard"></section>
+      <nav id="pageNav" class="page-nav" aria-label="Pagine principali"></nav>
 
-      <nav id="tabs" class="tabs" aria-label="Sezioni"></nav>
+      <section class="page active" data-page="dashboard">
+        <div class="section-title">
+          <div>
+            <span class="eyebrow">Riepilogo</span>
+            <h2>Dashboard</h2>
+          </div>
+          <button id="saveWidgets" type="button">Salva widget</button>
+        </div>
+        <section id="dashboard" class="dashboard" aria-label="Widget dashboard"></section>
+      </section>
 
-      <section class="panel active" data-panel="calendar">
+      <section class="page" data-page="calendar">
         <div class="section-title"><h2>Calendario</h2><button data-open="eventForm">+ Evento</button></div>
         <div id="calendarGrid" class="calendar-grid"></div>
         <form id="eventForm" class="card form-card hidden">
@@ -62,7 +71,7 @@ start_secure_session();
         </form>
       </section>
 
-      <section class="panel" data-panel="shopping">
+      <section class="page" data-page="shopping">
         <div class="section-title"><h2>Lista spesa</h2><button data-open="shoppingForm">+ Lista</button></div>
         <form id="shoppingForm" class="card form-card hidden">
           <input name="title" placeholder="Nome lista" value="Spesa">
@@ -74,15 +83,17 @@ start_secure_session();
         <div id="shoppingLists" class="cards"></div>
       </section>
 
-      <section class="panel" data-panel="family">
-        <div class="section-title"><h2>Famiglia e figli</h2><div><button data-open="childForm">+ Figlio</button> <button data-open="familyForm">+ Impegno</button></div></div>
+      <section class="page" data-page="family">
+        <div class="section-title"><h2>Famiglia e figli</h2><div class="actions-row"><button data-open="childForm">+ Utente figlio</button><button data-open="familyForm">+ Impegno</button></div></div>
         <form id="childForm" class="card form-card hidden">
           <input name="name" placeholder="Nome figlio" required>
           <input name="birth_date" type="date" required>
           <input name="email" type="email" placeholder="Email opzionale">
+          <select name="parent_id" data-users="parents"><option value="">Genitore associato</option></select>
           <textarea name="personal_info" placeholder="Informazioni gestibili dal genitore"></textarea>
+          <input type="hidden" name="role" value="familiare">
           <input type="hidden" name="category" value="figlio">
-          <button>Salva profilo figlio</button>
+          <button>Salva utente figlio</button>
         </form>
         <form id="familyForm" class="card form-card hidden">
           <select name="child_id" data-users="children" required></select>
@@ -96,7 +107,7 @@ start_secure_session();
         <div id="familyTasks" class="timeline"></div>
       </section>
 
-      <section class="panel" data-panel="reminders">
+      <section class="page" data-page="reminders">
         <div class="section-title"><h2>Promemoria</h2><button data-open="reminderForm">+ Promemoria</button></div>
         <form id="reminderForm" class="card form-card hidden">
           <input name="title" placeholder="Promemoria" required>
@@ -108,7 +119,7 @@ start_secure_session();
         <div id="remindersList" class="cards"></div>
       </section>
 
-      <section class="panel" data-panel="notes">
+      <section class="page" data-page="notes">
         <div class="section-title"><h2>Note</h2><button data-open="noteForm">+ Nota</button></div>
         <form id="noteForm" class="card form-card hidden">
           <input name="title" placeholder="Titolo nota" required>
@@ -119,7 +130,7 @@ start_secure_session();
         <div id="notesList" class="cards"></div>
       </section>
 
-      <section class="panel" data-panel="profile">
+      <section class="page" data-page="profile">
         <div class="section-title"><h2>Profilo</h2></div>
         <form id="profileForm" class="card form-card">
           <input name="email" type="email" placeholder="Email">
@@ -130,7 +141,7 @@ start_secure_session();
         </form>
       </section>
 
-      <section class="panel admin-only" data-panel="settings">
+      <section class="page admin-only" data-page="settings">
         <div class="section-title"><h2>Impostazioni</h2></div>
         <form id="settingsForm" class="card form-card">
           <label>Nome famiglia<input name="family_name" placeholder="Casa Rossi"></label>
@@ -140,17 +151,17 @@ start_secure_session();
         </form>
       </section>
 
-      <section class="panel admin-only" data-panel="users">
+      <section class="page admin-only" data-page="users">
         <div class="section-title"><h2>Utenti</h2><button data-open="userForm">+ Utente</button></div>
         <form id="userForm" class="card form-card hidden">
           <input name="name" placeholder="Nome" required>
-          <input name="phone" placeholder="Telefono (chiave utente)">
+          <input name="phone" placeholder="Telefono (obbligatorio tranne figli)">
           <input name="email" type="email" placeholder="Email">
           <input name="birth_date" type="date">
-          <input name="password" type="password" placeholder="Password iniziale">
+          <input name="password" type="password" placeholder="Password iniziale (opzionale per figli)">
           <select name="role"><option value="familiare">Familiare</option><option value="admin">Admin</option></select>
           <select name="category"><option>mamma</option><option>papà</option><option>figlio</option><option>nonno</option><option>zia</option><option>familiare</option></select>
-          <select name="parent_id" data-users="parents"><option value="">Genitore associato</option></select>
+          <select name="parent_id" data-users="parents"><option value="">Genitore associato se figlio</option></select>
           <textarea name="personal_info" placeholder="Info personali"></textarea>
           <label class="check"><input name="active" type="checkbox" checked> attivo</label>
           <button>Salva utente</button>

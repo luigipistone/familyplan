@@ -152,6 +152,9 @@ function user_save(string $method): void
     $phone = clean_string($d['phone'] ?? '', 30);
     $email = clean_string($d['email'] ?? '', 190);
     $category = clean_string($d['category'] ?? 'familiare', 30);
+    if (!in_array($category, ['nonno', 'zia', 'papà', 'mamma', 'figlio', 'familiare'], true)) {
+        $category = 'familiare';
+    }
     $role = in_array(($d['role'] ?? 'familiare'), ['admin', 'familiare'], true) ? $d['role'] : 'familiare';
     $parentId = !empty($d['parent_id']) ? (int) $d['parent_id'] : null;
 
@@ -177,12 +180,20 @@ function user_save(string $method): void
 
     if ($name === '') json_response(['ok' => false, 'error' => 'Nome richiesto.'], 422);
     if ($category !== 'figlio' && $phone === '') json_response(['ok' => false, 'error' => 'Telefono richiesto per gli adulti.'], 422);
+    if ($category === 'figlio' && $parentId) {
+        $stmt = db()->prepare("SELECT id FROM users WHERE id = ? AND category IN ('mamma', 'papà') AND active = 1");
+        $stmt->execute([$parentId]);
+        if (!$stmt->fetch()) json_response(['ok' => false, 'error' => 'Genitore associato non valido.'], 422);
+    }
     if ($id > 0) {
         db()->prepare('UPDATE users SET name=?, phone=?, email=?, birth_date=?, role=?, category=?, parent_id=?, personal_info=?, active=? WHERE id=?')
             ->execute([$name, $phone ?: null, $email ?: null, ($d['birth_date'] ?? null) ?: null, $role, $category, $parentId, clean_string($d['personal_info'] ?? '', 1000), !empty($d['active']) || !$isAdmin ? 1 : 0, $id]);
     } else {
-        $password = (string) ($d['password'] ?? bin2hex(random_bytes(6)));
-        if ($isAdmin && strlen($password) < 10) json_response(['ok' => false, 'error' => 'Password iniziale di almeno 10 caratteri.'], 422);
+        $password = (string) ($d['password'] ?? '');
+        if ($password === '') {
+            $password = bin2hex(random_bytes(12));
+        }
+        if ($isAdmin && $category !== 'figlio' && strlen($password) < 10) json_response(['ok' => false, 'error' => 'Password iniziale di almeno 10 caratteri per gli adulti.'], 422);
         db()->prepare('INSERT INTO users (name, phone, email, birth_date, password_hash, role, category, parent_id, personal_info, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)')
             ->execute([$name, $phone ?: null, $email ?: null, ($d['birth_date'] ?? null) ?: null, password_hash($password, PASSWORD_DEFAULT), $role, $category, $parentId, clean_string($d['personal_info'] ?? '', 1000)]);
         $id = (int) db()->lastInsertId();
