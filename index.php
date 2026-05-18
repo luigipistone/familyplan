@@ -70,7 +70,8 @@ $assetVersion = substr(hash('sha256', (string) max(
       <section class="page" data-page="calendar">
         <div class="section-title"><h2>Calendario</h2><button data-open="eventForm"><span data-icon="plus"></span> Evento</button></div>
         <div id="calendarGrid" class="calendar-grid"></div>
-        <form id="eventForm" class="card form-card modal-form hidden" data-modal-title="Nuovo evento">
+        <form id="eventForm" class="card form-card modal-form hidden" data-modal-title="Nuovo evento" data-modal-actions="event">
+          <input type="hidden" name="id">
           <input name="title" placeholder="Titolo evento" required>
           <input type="hidden" name="starts_at">
           <input type="hidden" name="ends_at">
@@ -78,7 +79,7 @@ $assetVersion = substr(hash('sha256', (string) max(
           <div class="soft-picker" data-picker="ends_at"><span>Fine</span><input name="ends_date" type="date"><select name="ends_hour"></select><select name="ends_minute"></select></div>
           <label class="check"><input name="shared" type="checkbox"> condividi con la famiglia</label>
           <textarea name="description" placeholder="Dettagli"></textarea>
-          <button>Salva evento</button>
+          <button class="form-submit">Salva evento</button>
         </form>
       </section>
 
@@ -174,6 +175,10 @@ $assetVersion = substr(hash('sha256', (string) max(
         <textarea name="personal_info" placeholder="Informazioni personali"></textarea>
         <button>Aggiorna profilo</button>
       </form>
+
+      <div id="shoppingDetail" class="card modal-form hidden" data-modal-title="Dettaglio lista spesa">
+        <div id="shoppingDetailContent"></div>
+      </div>
 
       <form id="widgetForm" class="card form-card modal-form hidden" data-modal-title="Widget dashboard">
         <div id="widgetChoices" class="widget-choices"></div>

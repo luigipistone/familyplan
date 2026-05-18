@@ -237,11 +237,23 @@ function calendar(string $method): void
     }
     if ($method === 'POST') {
         $d = request_json();
+        $id = (int) ($d['id'] ?? 0);
+        if (!empty($d['delete']) && $id > 0) {
+            db()->prepare('DELETE FROM events WHERE id = ? AND created_by = ?')->execute([$id, $user['id']]);
+            notify_users([$user['id']], 'calendar', 'Evento eliminato', $user['name'] . ' ha eliminato un evento.', (int) $user['id']);
+            json_response(['ok' => true]);
+        }
         $shared = !empty($d['shared']) ? 1 : 0;
+        if ($id > 0) {
+            db()->prepare('UPDATE events SET title=?, description=?, starts_at=?, ends_at=?, shared=? WHERE id=? AND created_by=?')
+                ->execute([clean_string($d['title'] ?? '', 160), clean_string($d['description'] ?? '', 1000), ($d['starts_at'] ?? ''), ($d['ends_at'] ?? null) ?: null, $shared, $id, $user['id']]);
+            notify_users($shared ? all_user_ids() : [$user['id']], 'calendar', 'Evento aggiornato', $user['name'] . ' ha aggiornato un evento' . ($shared ? ' condiviso.' : '.'), (int) $user['id']);
+            json_response(['ok' => true, 'id' => $id]);
+        }
         db()->prepare('INSERT INTO events (title, description, starts_at, ends_at, shared, created_by) VALUES (?, ?, ?, ?, ?, ?)')
             ->execute([clean_string($d['title'] ?? '', 160), clean_string($d['description'] ?? '', 1000), ($d['starts_at'] ?? ''), ($d['ends_at'] ?? null) ?: null, $shared, $user['id']]);
         notify_users($shared ? all_user_ids() : [$user['id']], 'calendar', 'Nuovo evento', $user['name'] . ' ha creato un evento' . ($shared ? ' condiviso.' : '.'), (int) $user['id']);
-        json_response(['ok' => true]);
+        json_response(['ok' => true, 'id' => (int) db()->lastInsertId()]);
     }
     json_response(['ok' => false], 405);
 }

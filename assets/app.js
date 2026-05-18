@@ -33,6 +33,8 @@ const icons = {
   logout: '<svg viewBox="0 0 24 24"><path d="M10 5H5v14h5"/><path d="M14 8l4 4-4 4M18 12H9"/></svg>',
   plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   edit: '<svg viewBox="0 0 24 24"><path d="M4 20h4l11-11a2.5 2.5 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+  trash: '<svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 14h10l1-14"/><path d="M9 7V4h6v3"/></svg>',
+  save: '<svg viewBox="0 0 24 24"><path d="M5 4h12l2 2v14H5z"/><path d="M8 4v6h8V4"/><path d="M8 20v-6h8v6"/></svg>',
   widgets: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>',
   x: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>',
 };
@@ -150,7 +152,10 @@ function setupConditionalFields() {
 function setupModalForms() {
   $$('.modal-form').forEach(form => {
     if (!form.querySelector('.modal-title')) {
-      form.insertAdjacentHTML('afterbegin', `<div class="modal-title"><h3>${esc(form.dataset.modalTitle || 'Modifica')}</h3><button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button></div>`);
+      const actions = form.dataset.modalActions === 'event'
+        ? `<div class="modal-actions"><button class="icon-btn event-save" type="submit" title="Salva evento" aria-label="Salva evento">${icon('save')}</button><button class="icon-btn event-delete hidden" type="button" title="Elimina evento" aria-label="Elimina evento">${icon('trash')}</button><button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button></div>`
+        : `<button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button>`;
+      form.insertAdjacentHTML('afterbegin', `<div class="modal-title"><h3>${esc(form.dataset.modalTitle || 'Modifica')}</h3>${actions}</div>`);
     }
   });
 }
@@ -161,6 +166,12 @@ function openModal(id) {
   if (!modal) return;
   $('#modalBackdrop').classList.add('active');
   modal.classList.remove('hidden');
+  if (id === 'eventForm' && !modal.elements.id.value) {
+    modal.querySelector('.modal-title h3').textContent = modal.dataset.modalTitle || 'Nuovo evento';
+    modal.querySelector('.event-delete')?.classList.add('hidden');
+    modal.querySelector('.event-save')?.classList.remove('hidden');
+    modal.querySelector('.form-submit')?.classList.remove('hidden');
+  }
   modal.querySelector('input, select, textarea, button:not(.modal-close)')?.focus();
 }
 
@@ -168,7 +179,11 @@ function closeModal(reset = false) {
   $('#modalBackdrop').classList.remove('active');
   $$('.modal-form:not(.hidden)').forEach(form => {
     form.classList.add('hidden');
-    if (reset && !['profileForm', 'widgetForm', 'settingsForm'].includes(form.id)) form.reset();
+    if (reset && !['profileForm', 'widgetForm', 'settingsForm'].includes(form.id) && typeof form.reset === 'function') form.reset();
+    if (form.id === 'eventForm') {
+      form.querySelector('.modal-title h3').textContent = form.dataset.modalTitle || 'Nuovo evento';
+      form.querySelector('.event-delete')?.classList.add('hidden');
+    }
   });
 }
 
@@ -328,11 +343,71 @@ function renderCalendar() {
 
 function eventPill(e) {
   const sharedOther = Number(e.shared) === 1 && Number(e.created_by) !== Number(state.user.id);
-  return `<span class="event-pill ${sharedOther ? 'shared-other' : ''}" title="${esc(e.created_by_name)}">${esc(e.title)} · ${esc(e.created_by_name)}</span>`;
+  return `<button type="button" class="event-pill ${sharedOther ? 'shared-other' : ''}" data-event-id="${e.id}" title="${esc(e.created_by_name)}">${esc(e.title)} · ${esc(e.created_by_name)}</button>`;
+}
+
+
+function splitSqlDateTime(value) {
+  if (!value) return { date: '', hour: '00', minute: '00' };
+  return { date: value.slice(0, 10), hour: value.slice(11, 13) || '00', minute: value.slice(14, 16) || '00' };
+}
+
+function openEventDetail(id) {
+  const event = state.data.events.find(e => Number(e.id) === Number(id));
+  if (!event) return;
+  const form = $('#eventForm');
+  const start = splitSqlDateTime(event.starts_at);
+  const end = splitSqlDateTime(event.ends_at);
+  form.elements.id.value = event.id;
+  form.elements.title.value = event.title || '';
+  form.elements.starts_date.value = start.date;
+  form.elements.starts_hour.value = start.hour;
+  form.elements.starts_minute.value = start.minute;
+  form.elements.ends_date.value = end.date;
+  form.elements.ends_hour.value = end.hour;
+  form.elements.ends_minute.value = end.minute;
+  form.elements.shared.checked = Number(event.shared) === 1;
+  form.elements.description.value = event.description || '';
+  form.querySelector('.modal-title h3').textContent = 'Dettaglio evento';
+  const readonly = Number(event.created_by) !== Number(state.user.id);
+  form.querySelector('.event-delete')?.classList.toggle('hidden', readonly);
+  form.querySelector('.event-save')?.classList.toggle('hidden', readonly);
+  form.querySelector('.form-submit')?.classList.toggle('hidden', readonly);
+  openModal('eventForm');
+}
+
+async function deleteCurrentEvent() {
+  const form = $('#eventForm');
+  const id = form.elements.id.value;
+  if (!id || !confirm('Eliminare questo evento?')) return;
+  await api('calendar', { method: 'POST', body: JSON.stringify({ id, delete: true }) });
+  closeModal(true);
+  toast('Evento eliminato');
+  await loadAll();
 }
 
 function renderShopping() {
-  $('#shoppingLists').innerHTML = state.data.shopping.map(l => `<article class="card"><h3>${esc(l.title)}</h3><p>${esc(formatDate(l.list_date))} · ${l.shared == 1 ? 'condivisa' : 'privata'} · ${l.archived_at ? 'archiviata' : 'attiva'}</p>${(l.items || []).map(i => `<div class="item-row ${i.checked == 1 ? 'done' : ''}"><input type="checkbox" ${i.checked == 1 ? 'checked' : ''} disabled>${esc(i.label)}</div>`).join('')}<button data-archive-list="${l.id}">Archivia</button></article>`).join('');
+  $('#shoppingLists').innerHTML = state.data.shopping.map(l => `<article class="card shopping-preview" data-shopping-id="${l.id}"><div><h3>${esc(l.title)}</h3><p>${esc(formatDate(l.list_date))} · ${l.shared == 1 ? 'condivisa' : 'privata'} · ${l.archived_at ? 'archiviata' : 'attiva'}</p></div><button type="button" class="link-button" data-open-shopping="${l.id}">Dettaglio</button></article>`).join('');
+}
+
+function openShoppingDetail(id) {
+  const list = state.data.shopping.find(l => Number(l.id) === Number(id));
+  if (!list) return;
+  $('#shoppingDetail').querySelector('.modal-title h3').textContent = `${list.title} · ${formatDate(list.list_date)}`;
+  $('#shoppingDetailContent').innerHTML = `<div class="shopping-detail-list">${(list.items || []).map((item, index) => `<label class="shopping-line ${item.checked == 1 ? 'done' : ''}"><input type="checkbox" data-shopping-item="${index}" ${item.checked == 1 ? 'checked' : ''}><span>${esc(item.label)}</span></label>`).join('')}</div><button type="button" data-archive-list="${list.id}">Archivia lista</button>`;
+  $('#shoppingDetail').dataset.listId = list.id;
+  openModal('shoppingDetail');
+}
+
+async function toggleShoppingItem(input) {
+  const list = state.data.shopping.find(l => Number(l.id) === Number($('#shoppingDetail').dataset.listId));
+  if (!list) return;
+  const item = list.items[Number(input.dataset.shoppingItem)];
+  item.checked = input.checked ? 1 : 0;
+  input.closest('.shopping-line')?.classList.toggle('done', input.checked);
+  await api('shopping', { method: 'POST', body: JSON.stringify({ id: list.id, title: list.title, list_date: list.list_date, shared: Number(list.shared) === 1, items: list.items }) });
+  await loadAll();
+  openShoppingDetail(list.id);
 }
 
 function renderFamily() {
@@ -378,7 +453,17 @@ document.addEventListener('click', async e => {
     return;
   }
   const open = e.target.closest('[data-open]');
-  if (open) { openModal(open.dataset.open); setupConditionalFields(); }
+  if (open) {
+    if (open.dataset.open === 'eventForm') $('#eventForm').reset();
+    openModal(open.dataset.open);
+    setupConditionalFields();
+  }
+  const eventBtn = e.target.closest('[data-event-id]');
+  if (eventBtn) openEventDetail(eventBtn.dataset.eventId);
+  const shoppingBtn = e.target.closest('[data-open-shopping], .shopping-preview');
+  if (shoppingBtn && !e.target.closest('[data-archive-list]')) openShoppingDetail(shoppingBtn.dataset.openShopping || shoppingBtn.dataset.shoppingId);
+  const shoppingItem = e.target.closest('[data-shopping-item]');
+  if (shoppingItem) await toggleShoppingItem(shoppingItem);
   const close = e.target.closest('.modal-close');
   if (close) closeModal(true);
   if (e.target.id === 'modalBackdrop') closeModal(true);
@@ -402,6 +487,8 @@ document.addEventListener('click', async e => {
     await api('logout', { method: 'POST', body: '{}' });
     location.reload();
   }
+  const deleteEvent = e.target.closest('.event-delete');
+  if (deleteEvent) await deleteCurrentEvent();
   if (e.target.id === 'profileBtn' || e.target.closest('#profileBtn')) openModal('profileForm');
   if (e.target.id === 'widgetBtn' || e.target.closest('#widgetBtn')) openModal('widgetForm');
   if (e.target.id === 'themeToggle' || e.target.closest('#themeToggle')) {

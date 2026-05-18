@@ -58,9 +58,9 @@ input, select, textarea {
   outline: 1px solid #8fb9aa25;
 }
 textarea { min-height: 100px; resize: vertical; }
-input[type="date"] { min-height: 40px; padding: .65rem .8rem; color-scheme: light; }
+input[type="date"] { min-height: 40px; padding: .65rem .8rem; color-scheme: light; cursor: pointer; }
 body.dark input[type="date"] { color-scheme: dark; }
-.soft-picker select { padding: .65rem .55rem; min-height: 40px; }
+.soft-picker select { padding: .65rem .55rem; min-height: 40px; cursor: pointer; }
 label { display: grid; gap: .35rem; color: var(--muted); font-size: .92rem; }
 a { color: var(--primary-strong); font-weight: 800; text-decoration: none; }
 .hidden { display: none !important; }
@@ -214,6 +214,7 @@ a { color: var(--primary-strong); font-weight: 800; text-decoration: none; }
 }
 .check input[type="checkbox"] {
   appearance: none;
+  cursor: pointer;
   width: 18px;
   height: 18px;
   border-radius: 6px;
@@ -225,18 +226,18 @@ a { color: var(--primary-strong); font-weight: 800; text-decoration: none; }
 }
 .check input[type="checkbox"]::after {
   content: "";
-  width: 8px;
-  height: 4px;
-  border-left: 2px solid white;
-  border-bottom: 2px solid white;
-  transform: translateY(-1px) rotate(-45deg) scale(0);
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: translateY(-1px) rotate(45deg) scale(0);
   transition: .18s;
 }
 .check input[type="checkbox"]:checked {
   background: var(--primary-strong);
   border-color: var(--primary-strong);
 }
-.check input[type="checkbox"]:checked::after { transform: translateY(-1px) rotate(-45deg) scale(1); }
+.check input[type="checkbox"]:checked::after { transform: translateY(-1px) rotate(45deg) scale(1); }
 .soft-picker {
   display: grid;
   grid-template-columns: minmax(130px, 1fr) 72px 72px;
@@ -258,6 +259,61 @@ a { color: var(--primary-strong); font-weight: 800; text-decoration: none; }
 .day.expanded .more-events.hidden { display: block; }
 .more-btn { margin-top: .25rem; padding: .3rem .5rem; font-size: .72rem; background: transparent; color: var(--primary-strong); box-shadow: none; }
 .event-pill.shared-other { background: color-mix(in srgb, var(--accent) 55%, transparent); border: 1px solid var(--accent); }
+
+.event-pill {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  background: #8fb9aa33;
+  box-shadow: none;
+  color: var(--primary-strong);
+}
+.modal-actions { display: flex; align-items: center; gap: .45rem; }
+.parent-fields { display: grid; gap: .8rem; }
+.shopping-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+  cursor: pointer;
+}
+.shopping-detail-list { display: grid; gap: .55rem; }
+.shopping-line {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  justify-content: start;
+  gap: .7rem;
+  padding: .65rem .75rem;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 82%, var(--primary));
+  color: var(--text);
+  cursor: pointer;
+}
+.shopping-line input[type="checkbox"] {
+  appearance: none;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 2px solid color-mix(in srgb, var(--primary) 70%, var(--surface));
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+}
+.shopping-line input[type="checkbox"]::after {
+  content: "";
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: translateY(-1px) rotate(45deg) scale(0);
+  transition: .18s;
+}
+.shopping-line input[type="checkbox"]:checked { background: var(--primary-strong); border-color: var(--primary-strong); }
+.shopping-line input[type="checkbox"]:checked::after { transform: translateY(-1px) rotate(45deg) scale(1); }
+.shopping-line.done span { text-decoration: line-through; color: var(--muted); }
+
 
 .item-row { display: flex; align-items: center; gap: .6rem; padding: .35rem 0; }
 .done, .item-row.done { text-decoration: line-through; color: var(--muted); }
@@ -338,3 +394,4 @@ a { color: var(--primary-strong); font-weight: 800; text-decoration: none; }
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes modalIn { from { opacity: 0; transform: translate(-50%, calc(-50% + 16px)); } to { opacity: 1; transform: translate(-50%, -50%); } }
+.event-pill:hover { box-shadow: none; transform: none; }
