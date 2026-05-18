@@ -7,6 +7,7 @@ const pageDefs = {
   family: ['Famiglia', 'family'],
   reminders: ['Promemoria', 'bell'],
   notes: ['Note', 'note'],
+  notifications: ['Notifiche', 'bell'],
   settings: ['Impostazioni', 'settings'],
   users: ['Utenti', 'users'],
 };
@@ -81,6 +82,8 @@ async function boot() {
   injectStaticIcons(document);
   setupModalForms();
   setupSoftPickers();
+  setupDateFieldOpeners();
+  setupWysiwyg();
   renderProductCatalog();
   setupConditionalFields();
   try {
@@ -91,6 +94,23 @@ async function boot() {
   } catch {
     showAuth();
   }
+}
+
+
+function setupDateFieldOpeners() {
+  $$('input[type="date"]').forEach(input => {
+    input.classList.add('date-clickable');
+    input.addEventListener('click', () => input.showPicker?.());
+  });
+}
+
+function setupWysiwyg() {
+  $$('.wysiwyg').forEach(el => {
+    const name = el.dataset.wysiwygTarget;
+    const hidden = el.closest('form')?.querySelector(`input[name="${name}"]`);
+    if (hidden) el.innerHTML = hidden.value || '';
+    el.addEventListener('input', () => { if (hidden) hidden.value = el.innerHTML; });
+  });
 }
 
 function injectStaticIcons(root = document) {
@@ -394,7 +414,7 @@ function openShoppingDetail(id) {
   const list = state.data.shopping.find(l => Number(l.id) === Number(id));
   if (!list) return;
   $('#shoppingDetail').querySelector('.modal-title h3').textContent = `${list.title} · ${formatDate(list.list_date)}`;
-  $('#shoppingDetailContent').innerHTML = `<div class="shopping-detail-list">${(list.items || []).map((item, index) => `<label class="shopping-line ${item.checked == 1 ? 'done' : ''}"><input type="checkbox" data-shopping-item="${index}" ${item.checked == 1 ? 'checked' : ''}><span>${esc(item.label)}</span></label>`).join('')}</div><button type="button" data-archive-list="${list.id}">Archivia lista</button>`;
+  $('#shoppingDetailContent').innerHTML = `<div class="shopping-detail-list">${(list.items || []).map((item, index) => `<label class="shopping-line ${item.checked == 1 ? 'done' : ''}"><input type="checkbox" data-shopping-item="${index}" ${item.checked == 1 ? 'checked' : ''}><span>${esc(item.label)}</span></label>`).join('')}</div><div class="shopping-actions"><button type="button" class="link-button" data-edit-shopping="${list.id}">${icon('edit')} Modifica</button><button type="button" data-archive-list="${list.id}">Archivia lista</button></div>`;
   $('#shoppingDetail').dataset.listId = list.id;
   openModal('shoppingDetail');
 }
@@ -411,15 +431,15 @@ async function toggleShoppingItem(input) {
 }
 
 function renderFamily() {
-  $('#familyTasks').innerHTML = state.data.family.map(t => `<article class="card"><h3>${esc(t.child_name)} · ${esc(t.type)}</h3><p>${esc(formatDate(t.task_date))} ${esc(t.task_time || '')} · ${esc(t.assignee_name || 'da assegnare')}</p><p>${esc(t.notes)}</p></article>`).join('') || '<p>Nessun impegno figli oggi.</p>';
+  $('#familyTasks').innerHTML = state.data.family.map(t => `<article class="card"><h3>${esc(t.child_name)} · ${esc(t.type)}</h3><p>${esc(formatDate(t.task_date))} ${esc(t.task_time || '')} · ${esc(t.assignee_name || 'da assegnare')}</p><p>${esc(t.notes)}</p><button type="button" class="link-button" data-edit-family="${t.id}">${icon('edit')} Modifica</button></article>`).join('') || '<p>Nessun impegno figli oggi.</p>';
 }
 
 function renderReminders() {
-  $('#remindersList').innerHTML = state.data.reminders.map(r => `<article class="card"><h3>${esc(r.title)}</h3><p>${esc(r.due_at ? `${formatDate(r.due_at)} ${r.due_at.slice(11, 16)}` : 'senza data')} · ${esc(r.recurrence)} · ${r.shared == 1 ? 'condiviso' : 'privato'}</p></article>`).join('');
+  $('#remindersList').innerHTML = state.data.reminders.map(r => `<article class="card"><h3>${esc(r.title)}</h3><p>${esc(r.due_at ? `${formatDate(r.due_at)} ${r.due_at.slice(11, 16)}` : 'senza data')} · ${esc(r.recurrence)} · ${r.shared == 1 ? 'condiviso' : 'privato'}</p><button type="button" class="link-button" data-edit-reminder="${r.id}">${icon('edit')} Modifica</button></article>`).join('');
 }
 
 function renderNotes() {
-  $('#notesList').innerHTML = state.data.notes.map(n => `<article class="card"><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p><small>${n.archived_at ? 'Archiviata' : 'Attiva'}</small></article>`).join('');
+  $('#notesList').innerHTML = state.data.notes.map(n => `<article class="card"><h3>${esc(n.title)}</h3><p>${n.body || ''}</p><small>${n.archived_at ? 'Archiviata' : 'Attiva'}</small><button type="button" class="link-button" data-edit-note="${n.id}">${icon('edit')} Modifica</button></article>`).join('');
 }
 
 function renderUsers() {
@@ -434,6 +454,7 @@ function renderProfile() {
 function renderNotifications() {
   const unread = state.data.notifications.filter(n => !n.read_at).length;
   $('#notifBadge').style.display = unread ? 'block' : 'none';
+  $('#notificationsList').innerHTML = state.data.notifications.map(n => `<article class="card"><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p><small>${esc(formatDate(n.created_at))} ${esc((n.created_at || '').slice(11, 16))} · ${n.read_at ? 'letta' : 'nuova'}</small></article>`).join('') || '<article class="card"><p>Nessuna notifica.</p></article>';
 }
 
 async function saveForm(form, action, transform = x => x) {
@@ -483,6 +504,66 @@ document.addEventListener('click', async e => {
     toast('Lista archiviata');
     await loadAll();
   }
+  const editShopping = e.target.closest('[data-edit-shopping]');
+  if (editShopping) {
+    const list = state.data.shopping.find(l => Number(l.id) === Number(editShopping.dataset.editShopping));
+    if (list) {
+      const f = $('#shoppingForm');
+      f.elements.id.value = list.id;
+      f.elements.title.value = list.title || '';
+      f.elements.list_date.value = list.list_date || today();
+      f.elements.shared.checked = Number(list.shared) === 1;
+      f.elements.items.value = (list.items || []).map(i => i.label).join('\n');
+      openModal('shoppingForm');
+    }
+  }
+  const editReminder = e.target.closest('[data-edit-reminder]');
+  if (editReminder) {
+    const r = state.data.reminders.find(v => Number(v.id) === Number(editReminder.dataset.editReminder));
+    if (r) {
+      const f = $('#reminderForm');
+      const dt = splitSqlDateTime(r.due_at);
+      f.elements.id.value = r.id;
+      f.elements.title.value = r.title || '';
+      f.elements.due_date.value = dt.date;
+      f.elements.due_hour.value = dt.hour;
+      f.elements.due_minute.value = dt.minute;
+      f.elements.recurrence.value = r.recurrence || 'none';
+      f.elements.shared.checked = Number(r.shared) === 1;
+      openModal('reminderForm');
+    }
+  }
+  const editNote = e.target.closest('[data-edit-note]');
+  if (editNote) {
+    const n = state.data.notes.find(v => Number(v.id) === Number(editNote.dataset.editNote));
+    if (n) {
+      const f = $('#noteForm');
+      f.elements.id.value = n.id;
+      f.elements.title.value = n.title || '';
+      f.elements.body.value = n.body || '';
+      f.querySelector('[data-wysiwyg-target="body"]').innerHTML = n.body || '';
+      f.elements.archived.checked = !!n.archived_at;
+      openModal('noteForm');
+    }
+  }
+  const editFamily = e.target.closest('[data-edit-family]');
+  if (editFamily) {
+    const t = state.data.family.find(v => Number(v.id) === Number(editFamily.dataset.editFamily));
+    if (t) {
+      const f = $('#familyForm');
+      f.elements.id.value = t.id;
+      f.elements.child_id.value = t.child_id || '';
+      f.elements.assignee_id.value = t.assignee_id || '';
+      f.elements.task_date.value = t.task_date || today();
+      const [h, m] = String(t.task_time || '00:00').split(':');
+      f.elements.task_hour.value = h || '00';
+      f.elements.task_minute.value = m || '00';
+      f.elements.type.value = t.type || '';
+      f.elements.recurrence.value = t.recurrence || 'none';
+      f.elements.notes.value = t.notes || '';
+      openModal('familyForm');
+    }
+  }
   if (e.target.id === 'logoutBtn' || e.target.closest('#logoutBtn')) {
     await api('logout', { method: 'POST', body: '{}' });
     location.reload();
@@ -497,8 +578,7 @@ document.addEventListener('click', async e => {
     await api('profile-save', { method: 'POST', body: JSON.stringify({ theme: state.user.theme, email: state.user.email, birth_date: state.user.birth_date, personal_info: state.user.personal_info, category: state.user.category }) });
   }
   if (e.target.id === 'notifyBtn' || e.target.closest('#notifyBtn')) {
-    const body = state.data.notifications.slice(0, 6).map(n => `${n.title}: ${n.body}`).join('\n') || 'Nessuna notifica';
-    alert(body);
+    navigateTo('notifications');
     await api('notifications', { method: 'POST', body: '{}' });
     await loadAll();
   }
@@ -519,10 +599,10 @@ $('#loginForm').addEventListener('submit', async e => {
 
 $('#resetRequestForm').addEventListener('submit', async e => { e.preventDefault(); await api('request-reset', { method: 'POST', body: JSON.stringify(formData(e.target)) }); toast('Controlla la tua email'); });
 $('#eventForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'calendar', d => ({ ...d, starts_at: toSqlDateTime(combineDateTime(d.starts_date, d.starts_hour, d.starts_minute)), ends_at: toSqlDateTime(combineDateTime(d.ends_date, d.ends_hour, d.ends_minute)), shared: !!d.shared })); });
-$('#shoppingForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'shopping', d => ({ ...d, shared: !!d.shared, items: (d.items || '').split('\n').filter(Boolean).map(label => ({ label, checked: false })) })); });
-$('#familyForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'family', d => ({ ...d, task_time: `${d.task_hour || '00'}:${d.task_minute || '00'}` })); });
-$('#reminderForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'reminders', d => ({ ...d, due_at: toSqlDateTime(combineDateTime(d.due_date, d.due_hour, d.due_minute)), shared: !!d.shared })); });
-$('#noteForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'notes', d => ({ ...d, archived: !!d.archived })); });
+$('#shoppingForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'shopping', d => ({ ...d, id: Number(d.id || 0), shared: !!d.shared, items: (d.items || '').split('\n').filter(Boolean).map(label => ({ label, checked: false })) })); });
+$('#familyForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'family', d => ({ ...d, id: Number(d.id || 0), task_time: `${d.task_hour || '00'}:${d.task_minute || '00'}` })); });
+$('#reminderForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'reminders', d => ({ ...d, id: Number(d.id || 0), due_at: toSqlDateTime(combineDateTime(d.due_date, d.due_hour, d.due_minute)), shared: !!d.shared })); });
+$('#noteForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'notes', d => ({ ...d, id: Number(d.id || 0), archived: !!d.archived })); });
 $('#profileForm').addEventListener('submit', async e => { e.preventDefault(); const r = await api('profile-save', { method: 'POST', body: JSON.stringify(formData(e.target)) }); state.user = r.user; applyTheme(state.user.theme); closeModal(false); await loadAll(); toast('Profilo aggiornato'); });
 $('#settingsForm').addEventListener('submit', async e => { e.preventDefault(); await api('settings', { method: 'POST', body: JSON.stringify({ settings: formData(e.target) }) }); toast('Impostazioni aggiornate'); });
 $('#userForm').addEventListener('submit', e => { e.preventDefault(); saveForm(e.target, 'user-save', d => ({ ...d, active: !!d.active })); });

@@ -86,6 +86,7 @@ $assetVersion = substr(hash('sha256', (string) max(
       <section class="page" data-page="shopping">
         <div class="section-title"><h2>Lista spesa</h2><button data-open="shoppingForm"><span data-icon="plus"></span> Lista</button></div>
         <form id="shoppingForm" class="card form-card modal-form hidden" data-modal-title="Nuova lista spesa">
+          <input type="hidden" name="id">
           <input name="title" placeholder="Nome lista" value="Spesa">
           <input name="list_date" type="date">
           <label class="check"><input name="shared" type="checkbox"> condivisa con la famiglia</label>
@@ -99,6 +100,7 @@ $assetVersion = substr(hash('sha256', (string) max(
       <section class="page" data-page="family">
         <div class="section-title"><h2>Famiglia e figli</h2><div class="actions-row"><button data-open="familyForm"><span data-icon="plus"></span> Impegno</button></div></div>
         <form id="familyForm" class="card form-card modal-form hidden" data-modal-title="Nuovo impegno figli">
+          <input type="hidden" name="id">
           <select name="child_id" data-users="children" required></select>
           <select name="assignee_id" data-users="all"><option value="">Da assegnare</option></select>
           <div class="soft-picker" data-picker="task"><span>Data e ora</span><input name="task_date" type="date" required><select name="task_hour"></select><select name="task_minute"></select></div>
@@ -115,6 +117,7 @@ $assetVersion = substr(hash('sha256', (string) max(
       <section class="page" data-page="reminders">
         <div class="section-title"><h2>Promemoria</h2><button data-open="reminderForm"><span data-icon="plus"></span> Promemoria</button></div>
         <form id="reminderForm" class="card form-card modal-form hidden" data-modal-title="Nuovo promemoria">
+          <input type="hidden" name="id">
           <input name="title" placeholder="Promemoria" required>
           <input type="hidden" name="due_at">
           <div class="soft-picker" data-picker="due_at"><span>Scadenza</span><input name="due_date" type="date"><select name="due_hour"></select><select name="due_minute"></select></div>
@@ -128,12 +131,21 @@ $assetVersion = substr(hash('sha256', (string) max(
       <section class="page" data-page="notes">
         <div class="section-title"><h2>Note</h2><button data-open="noteForm"><span data-icon="plus"></span> Nota</button></div>
         <form id="noteForm" class="card form-card modal-form hidden" data-modal-title="Nuova nota">
+          <input type="hidden" name="id">
           <input name="title" placeholder="Titolo nota" required>
-          <textarea name="body" placeholder="Scrivi qui"></textarea>
+          <div class="wysiwyg-wrap">
+            <div class="wysiwyg-tools"><button type="button" data-wysiwyg="bold"><b>B</b></button><button type="button" data-wysiwyg="italic"><i>I</i></button><button type="button" data-wysiwyg="underline"><u>U</u></button></div>
+            <div class="wysiwyg" data-wysiwyg-target="body" contenteditable="true" aria-label="Scrivi qui"></div>
+          </div>
+          <input type="hidden" name="body">
           <label class="check"><input name="archived" type="checkbox"> archivia subito</label>
           <button>Salva nota</button>
         </form>
         <div id="notesList" class="cards"></div>
+      </section>
+      <section class="page" data-page="notifications">
+        <div class="section-title"><h2>Centro notifiche</h2></div>
+        <div id="notificationsList" class="cards"></div>
       </section>
 
       <section class="page admin-only" data-page="settings">
@@ -160,7 +172,11 @@ $assetVersion = substr(hash('sha256', (string) max(
             <select name="parent_id" data-users="parents"><option value="">Mamma/Papà 1 se figlio minore di 14</option></select>
             <select name="second_parent_id" data-users="parents"><option value="">Mamma/Papà 2 se figlio minore di 14</option></select>
           </div>
-          <textarea name="personal_info" placeholder="Info personali"></textarea>
+          <div class="wysiwyg-wrap">
+            <div class="wysiwyg-tools"><button type="button" data-wysiwyg="bold"><b>B</b></button><button type="button" data-wysiwyg="italic"><i>I</i></button><button type="button" data-wysiwyg="underline"><u>U</u></button></div>
+            <div class="wysiwyg" data-wysiwyg-target="personal_info" contenteditable="true" aria-label="Info personali"></div>
+          </div>
+          <input type="hidden" name="personal_info">
           <label class="check"><input name="active" type="checkbox" checked> attivo</label>
           <button>Salva utente</button>
         </form>

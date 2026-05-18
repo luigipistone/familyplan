@@ -310,6 +310,12 @@ function family_day(string $method): void
     }
     if ($method === 'POST') {
         $d = request_json();
+        $id = (int) ($d['id'] ?? 0);
+        if ($id > 0) {
+            db()->prepare('UPDATE family_tasks SET child_id=?, assignee_id=?, task_date=?, task_time=?, type=?, notes=?, recurrence=? WHERE id=? AND created_by=?')
+                ->execute([(int) $d['child_id'], !empty($d['assignee_id']) ? (int) $d['assignee_id'] : null, $d['task_date'] ?? date('Y-m-d'), ($d['task_time'] ?? null) ?: null, clean_string($d['type'] ?? 'impegno', 80), clean_string($d['notes'] ?? '', 1000), in_array(($d['recurrence'] ?? 'none'), ['none', 'daily', 'weekly', 'monthly'], true) ? $d['recurrence'] : 'none', $id, $user['id']]);
+            json_response(['ok' => true, 'id' => $id]);
+        }
         $recurrence = in_array(($d['recurrence'] ?? 'none'), ['none', 'daily', 'weekly', 'monthly'], true) ? $d['recurrence'] : 'none';
         $count = max(1, min(52, (int) ($d['recurrence_count'] ?? 1)));
         if ($recurrence === 'none') $count = 1;
@@ -338,6 +344,12 @@ function reminders(string $method): void
     }
     if ($method === 'POST') {
         $d = request_json();
+        $id = (int) ($d['id'] ?? 0);
+        if ($id > 0) {
+            db()->prepare('UPDATE reminders SET title=?, due_at=?, recurrence=?, shared=?, completed_at=? WHERE id=? AND owner_id=?')
+                ->execute([clean_string($d['title'] ?? '', 180), ($d['due_at'] ?? null) ?: null, clean_string($d['recurrence'] ?? 'none', 30), !empty($d['shared']) ? 1 : 0, !empty($d['completed']) ? date('Y-m-d H:i:s') : null, $id, $user['id']]);
+            json_response(['ok' => true, 'id' => $id]);
+        }
         db()->prepare('INSERT INTO reminders (title, due_at, recurrence, owner_id, shared, completed_at) VALUES (?, ?, ?, ?, ?, ?)')
             ->execute([clean_string($d['title'] ?? '', 180), ($d['due_at'] ?? null) ?: null, clean_string($d['recurrence'] ?? 'none', 30), $user['id'], !empty($d['shared']) ? 1 : 0, !empty($d['completed']) ? date('Y-m-d H:i:s') : null]);
         notify_users(!empty($d['shared']) ? all_user_ids() : [$user['id']], 'reminder', 'Promemoria', $user['name'] . ' ha creato un promemoria.', (int) $user['id']);
@@ -356,6 +368,12 @@ function notes(string $method): void
     }
     if ($method === 'POST') {
         $d = request_json();
+        $id = (int) ($d['id'] ?? 0);
+        if ($id > 0) {
+            db()->prepare('UPDATE notes SET title=?, body=?, archived_at=? WHERE id=? AND owner_id=?')
+                ->execute([clean_string($d['title'] ?? '', 160), clean_string($d['body'] ?? '', 5000), !empty($d['archived']) ? date('Y-m-d H:i:s') : null, $id, $user['id']]);
+            json_response(['ok' => true, 'id' => $id]);
+        }
         db()->prepare('INSERT INTO notes (title, body, owner_id, archived_at) VALUES (?, ?, ?, ?)')->execute([clean_string($d['title'] ?? '', 160), clean_string($d['body'] ?? '', 5000), $user['id'], !empty($d['archived']) ? date('Y-m-d H:i:s') : null]);
         json_response(['ok' => true]);
     }

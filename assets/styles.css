@@ -230,14 +230,24 @@ a { color: var(--primary-strong); font-weight: 800; text-decoration: none; }
   height: 9px;
   border: solid white;
   border-width: 0 2px 2px 0;
-  transform: translateY(-1px) rotate(45deg) scale(0);
+  transform: translate(-50%, -52%) rotate(45deg) scale(0);
   transition: .18s;
+  position: absolute;
+  top: 50%;
+  left: 50%;
 }
 .check input[type="checkbox"]:checked {
   background: var(--primary-strong);
   border-color: var(--primary-strong);
 }
-.check input[type="checkbox"]:checked::after { transform: translateY(-1px) rotate(45deg) scale(1); }
+.check input[type="checkbox"]:checked::after { transform: translate(-50%, -52%) rotate(45deg) scale(1); }
+.date-clickable { cursor: pointer; }
+.shopping-actions { margin-top: .9rem; }
+.wysiwyg-wrap { border-radius: 16px; background: color-mix(in srgb, var(--surface) 86%, var(--primary)); outline: 1px solid #8fb9aa25; overflow: hidden; }
+.wysiwyg-tools { display: flex; gap: .3rem; padding: .4rem .5rem; border-bottom: 1px solid #8fb9aa30; }
+.wysiwyg-tools button { background: transparent; color: var(--text); box-shadow: none; padding: .25rem .55rem; border-radius: 10px; }
+.wysiwyg { min-height: 170px; padding: .8rem 1rem; }
+.wysiwyg:focus { outline: none; }
 .soft-picker {
   display: grid;
   grid-template-columns: minmax(130px, 1fr) 72px 72px;
