@@ -8,6 +8,9 @@ const pageDefs = {
   reminders: ['Promemoria', 'bell'],
   notes: ['Note', 'note'],
   notifications: ['Notifiche', 'bell'],
+  remindersArchive: ['Archivio promemoria', 'note'],
+  notesArchive: ['Archivio note', 'note'],
+  notificationsArchive: ['Archivio notifiche', 'note'],
   settings: ['Impostazioni', 'settings'],
   users: ['Utenti', 'users'],
 };
@@ -409,16 +412,23 @@ async function deleteCurrentEvent() {
 function renderShopping() {
   const activeLists = state.data.shopping.filter(l => !l.archived_at);
   const archivedLists = state.data.shopping.filter(l => !!l.archived_at);
-  $('#shoppingLists').innerHTML = activeLists.map(l => `<article class="card shopping-preview" data-shopping-id="${l.id}"><div><h3>${esc(l.title)}</h3><p>${esc(formatDate(l.list_date))} · ${l.shared == 1 ? 'condivisa' : 'privata'} · attiva</p></div><button type="button" class="link-button" data-open-shopping="${l.id}">Dettaglio</button></article>`).join('') || '<article class="card"><p>Nessuna lista attiva.</p></article>';
-  $('#shoppingArchiveContent').innerHTML = archivedLists.map(l => `<article class="card shopping-preview" data-shopping-id="${l.id}"><div><h3>${esc(l.title)}</h3><p>Archiviata · ${esc(formatDate(l.archived_at || l.list_date))}</p></div><button type="button" class="link-button" data-open-shopping="${l.id}">Apri</button></article>`).join('') || '<article class="card"><p>Archivio vuoto.</p></article>';
+  $('#shoppingLists').innerHTML = activeLists.map(l => `<article class="card shopping-preview" data-shopping-id="${l.id}"><div><h3>${esc(l.title)}</h3><p>${esc(formatDate(l.list_date))} · ${l.shared == 1 ? 'condivisa' : 'privata'} · attiva</p></div></article>`).join('') || '<article class="card"><p>Nessuna lista attiva.</p></article>';
+  $('#shoppingArchiveContent').innerHTML = archivedLists.map(l => `<article class="card shopping-preview" data-shopping-id="${l.id}"><div><h3>${esc(l.title)}</h3><p>Archiviata · ${esc(formatDate(l.archived_at || l.list_date))}</p></div></article>`).join('') || '<article class="card"><p>Archivio vuoto.</p></article>';
 }
 
 function openShoppingDetail(id) {
   const list = state.data.shopping.find(l => Number(l.id) === Number(id));
   if (!list) return;
-  $('#shoppingDetail').querySelector('.modal-title h3').textContent = `${list.title} · ${formatDate(list.list_date)}`;
-  $('#shoppingDetailContent').innerHTML = `<div class="shopping-detail-list">${(list.items || []).map((item, index) => `<label class="shopping-line ${item.checked == 1 ? 'done' : ''}"><input type="checkbox" data-shopping-item="${index}" ${item.checked == 1 ? 'checked' : ''}><span>${esc(item.label)}</span></label>`).join('')}</div><div class="shopping-actions"><button type="button" data-archive-list="${list.id}">${list.archived_at ? 'Già archiviata' : 'Archivia lista'}</button></div>`;
-  $('#shoppingDetail').dataset.listId = list.id;
+  const form = $('#shoppingDetail');
+  form.elements.id.value = list.id;
+  form.querySelector('.modal-title h3').textContent = `${list.title} · ${formatDate(list.list_date)}`;
+  form.querySelector('.event-edit')?.classList.remove('hidden');
+  form.querySelector('.event-delete')?.classList.remove('hidden');
+  form.querySelector('.event-save')?.classList.remove('hidden');
+  form.querySelector('.event-save')?.setAttribute('title', list.archived_at ? 'Ripristina' : 'Archivia');
+  form.querySelector('.event-save')?.setAttribute('aria-label', list.archived_at ? 'Ripristina' : 'Archivia');
+  $('#shoppingDetailContent').innerHTML = `<div class="shopping-detail-list">${(list.items || []).map((item, index) => `<label class="shopping-line ${item.checked == 1 ? 'done' : ''}"><input type="checkbox" data-shopping-item="${index}" ${item.checked == 1 ? 'checked' : ''}><span>${esc(item.label)}</span></label>`).join('')}</div>`;
+  form.dataset.listId = list.id;
   openModal('shoppingDetail');
 }
 
@@ -438,11 +448,17 @@ function renderFamily() {
 }
 
 function renderReminders() {
-  $('#remindersList').innerHTML = state.data.reminders.map(r => `<article class="card"><h3>${esc(r.title)}</h3><p>${esc(r.due_at ? `${formatDate(r.due_at)} ${r.due_at.slice(11, 16)}` : 'senza data')} · ${esc(r.recurrence)} · ${r.shared == 1 ? 'condiviso' : 'privato'}</p><button type="button" class="link-button" data-edit-reminder="${r.id}">${icon('edit')} Modifica</button></article>`).join('');
+  const active = state.data.reminders.filter(r => !r.completed_at);
+  const archived = state.data.reminders.filter(r => !!r.completed_at);
+  $('#remindersList').innerHTML = active.map(r => `<article class="card" data-edit-reminder="${r.id}"><h3>${esc(r.title)}</h3><p>${esc(r.due_at ? `${formatDate(r.due_at)} ${r.due_at.slice(11, 16)}` : 'senza data')} · ${esc(r.recurrence)} · ${r.shared == 1 ? 'condiviso' : 'privato'}</p></article>`).join('') || '<article class="card"><p>Nessun promemoria attivo.</p></article>';
+  $('#remindersArchiveList').innerHTML = archived.map(r => `<article class="card" data-edit-reminder="${r.id}"><h3>${esc(r.title)}</h3><p>${esc(r.due_at ? `${formatDate(r.due_at)} ${r.due_at.slice(11, 16)}` : 'senza data')} · archiviato</p></article>`).join('') || '<article class="card"><p>Archivio promemoria vuoto.</p></article>';
 }
 
 function renderNotes() {
-  $('#notesList').innerHTML = state.data.notes.map(n => `<article class="card"><h3>${esc(n.title)}</h3><p>${n.body || ''}</p><small>${n.archived_at ? 'Archiviata' : 'Attiva'}</small><button type="button" class="link-button" data-edit-note="${n.id}">${icon('edit')} Modifica</button></article>`).join('');
+  const active = state.data.notes.filter(n => !n.archived_at);
+  const archived = state.data.notes.filter(n => !!n.archived_at);
+  $('#notesList').innerHTML = active.map(n => `<article class="card" data-edit-note="${n.id}"><h3>${esc(n.title)}</h3><p>${n.body || ''}</p><small>Attiva</small></article>`).join('') || '<article class="card"><p>Nessuna nota attiva.</p></article>';
+  $('#notesArchiveList').innerHTML = archived.map(n => `<article class="card" data-edit-note="${n.id}"><h3>${esc(n.title)}</h3><p>${n.body || ''}</p><small>Archiviata</small></article>`).join('') || '<article class="card"><p>Archivio note vuoto.</p></article>';
 }
 
 function renderUsers() {
@@ -459,7 +475,8 @@ function renderNotifications() {
   const unreadItems = state.data.notifications.filter(n => !n.read_at);
   const archivedItems = state.data.notifications.filter(n => !!n.read_at);
   $('#notifBadge').style.display = unread ? 'block' : 'none';
-  $('#notificationsList').innerHTML = `<article class="card"><h3>Nuove</h3>${unreadItems.map(n => `<p><strong>${esc(n.title)}</strong><br>${esc(n.body)}</p>`).join('') || '<p>Nessuna notifica nuova.</p>'}</article><article class="card"><h3>Archivio notifiche</h3>${archivedItems.map(n => `<p><strong>${esc(n.title)}</strong><br>${esc(n.body)}<br><small>${esc(formatDate(n.read_at))} ${esc((n.read_at || '').slice(11, 16))}</small></p>`).join('') || '<p>Nessuna notifica archiviata.</p>'}</article>`;
+  $('#notificationsList').innerHTML = unreadItems.map(n => `<article class="card"><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p></article>`).join('') || '<article class="card"><p>Nessuna notifica nuova.</p></article>';
+  $('#notificationsArchiveList').innerHTML = archivedItems.map(n => `<article class="card"><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p><small>${esc(formatDate(n.read_at))} ${esc((n.read_at || '').slice(11, 16))}</small></article>`).join('') || '<article class="card"><p>Nessuna notifica archiviata.</p></article>';
 }
 
 async function deleteFromModal(formId, action) {
@@ -519,7 +536,7 @@ document.addEventListener('click', async e => {
     expandDay.textContent = day?.classList.contains('expanded') ? 'Mostra meno' : `Altri ${expandDay.dataset.moreCount}`;
   }
   const product = e.target.closest('[data-product]');
-  if (product) addShoppingProduct(product.dataset.product);
+  if (product) { addShoppingProduct(product.dataset.product); product.classList.add('shopping-product-picked'); setTimeout(() => product.classList.remove('shopping-product-picked'), 350); }
   const cat = e.target.closest('[data-product-category]');
   if (cat) toggleProductCategory(cat.dataset.productCategory);
   const arch = e.target.closest('[data-archive-list]');
@@ -607,6 +624,7 @@ document.addEventListener('click', async e => {
     if (form?.id === 'reminderForm') await deleteFromModal('reminderForm', 'reminders');
     if (form?.id === 'noteForm') await deleteFromModal('noteForm', 'notes');
     if (form?.id === 'shoppingForm') await deleteFromModal('shoppingForm', 'shopping');
+    if (form?.id === 'shoppingDetail') await api('shopping', { method: 'POST', body: JSON.stringify({ id: Number(form.elements.id.value || 0), delete: true }) }).then(loadAll).then(()=>closeModal(true));
     if (form?.id === 'familyForm') await deleteFromModal('familyForm', 'family');
   }
   if (e.target.id === 'profileBtn' || e.target.closest('#profileBtn')) openModal('profileForm');
@@ -625,6 +643,34 @@ document.addEventListener('click', async e => {
     await api('notifications', { method: 'POST', body: '{}' });
     await loadAll();
     toast('Notifiche segnate come lette');
+  }
+  const editInDetail = e.target.closest('#shoppingDetail .event-edit');
+  if (editInDetail) {
+    const list = state.data.shopping.find(l => Number(l.id) === Number($('#shoppingDetail').elements.id.value));
+    if (list) {
+      const f = $('#shoppingForm');
+      f.elements.id.value = list.id;
+      f.elements.title.value = list.title || '';
+      f.elements.list_date.value = list.list_date || today();
+      f.elements.shared.checked = Number(list.shared) === 1;
+      f.elements.items.value = (list.items || []).map(i => i.label).join('\n');
+      f.querySelector('.event-delete')?.classList.remove('hidden');
+      f.querySelector('.event-edit')?.classList.remove('hidden');
+      openModal('shoppingForm');
+    }
+  }
+  const archiveToggleInDetail = e.target.closest('#shoppingDetail .event-save');
+  if (archiveToggleInDetail) {
+    const list = state.data.shopping.find(l => Number(l.id) === Number($('#shoppingDetail').elements.id.value));
+    if (list) {
+      if (list.archived_at) {
+        await api('shopping', { method: 'POST', body: JSON.stringify({ id: list.id, title: list.title, list_date: list.list_date, shared: Number(list.shared) === 1, items: list.items }) });
+      } else {
+        await api('shopping', { method: 'POST', body: JSON.stringify({ id: list.id, archive: true }) });
+      }
+      await loadAll();
+      closeModal(true);
+    }
   }
 });
 

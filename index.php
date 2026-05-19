@@ -79,7 +79,6 @@ $assetVersion = substr(hash('sha256', (string) max(
           <div class="soft-picker" data-picker="ends_at"><span>Fine</span><input name="ends_date" type="date"><select name="ends_hour"></select><select name="ends_minute"></select></div>
           <label class="check"><input name="shared" type="checkbox"> condividi con la famiglia</label>
           <textarea name="description" placeholder="Dettagli"></textarea>
-          <button class="form-submit">Salva evento</button>
         </form>
       </section>
 
@@ -92,7 +91,6 @@ $assetVersion = substr(hash('sha256', (string) max(
           <label class="check"><input name="shared" type="checkbox"> condivisa con la famiglia</label>
           <div id="productCatalog" class="product-catalog" aria-label="Categorie prodotti"></div>
           <textarea name="items" placeholder="Prodotti selezionati o scritti, uno per riga"></textarea>
-          <button>Salva lista</button>
         </form>
         <div id="shoppingLists" class="cards"></div>
       </section>
@@ -115,7 +113,7 @@ $assetVersion = substr(hash('sha256', (string) max(
       </section>
 
       <section class="page" data-page="reminders">
-        <div class="section-title"><h2>Promemoria</h2><button data-open="reminderForm"><span data-icon="plus"></span> Promemoria</button></div>
+        <div class="section-title"><h2>Promemoria</h2><div class="actions-row"><button data-open="reminderForm"><span data-icon="plus"></span> Promemoria</button><button data-page-link="remindersArchive"><span data-icon="note"></span> Archivio</button></div></div>
         <form id="reminderForm" class="card form-card modal-form hidden" data-modal-title="Nuovo promemoria" data-modal-actions="crud">
           <input type="hidden" name="id">
           <input name="title" placeholder="Promemoria" required>
@@ -123,13 +121,16 @@ $assetVersion = substr(hash('sha256', (string) max(
           <div class="soft-picker" data-picker="due_at"><span>Scadenza</span><input name="due_date" type="date"><select name="due_hour"></select><select name="due_minute"></select></div>
           <select name="recurrence"><option value="none">Non ricorrente</option><option value="daily">Giornaliero</option><option value="weekly">Settimanale</option><option value="monthly">Mensile</option></select>
           <label class="check"><input name="shared" type="checkbox"> condiviso</label>
-          <button>Salva promemoria</button>
         </form>
         <div id="remindersList" class="cards"></div>
       </section>
+      <section class="page" data-page="remindersArchive">
+        <div class="section-title"><h2>Archivio promemoria</h2></div>
+        <div id="remindersArchiveList" class="cards"></div>
+      </section>
 
       <section class="page" data-page="notes">
-        <div class="section-title"><h2>Note</h2><button data-open="noteForm"><span data-icon="plus"></span> Nota</button></div>
+        <div class="section-title"><h2>Note</h2><div class="actions-row"><button data-open="noteForm"><span data-icon="plus"></span> Nota</button><button data-page-link="notesArchive"><span data-icon="note"></span> Archivio</button></div></div>
         <form id="noteForm" class="card form-card modal-form hidden" data-modal-title="Nuova nota" data-modal-actions="crud">
           <input type="hidden" name="id">
           <input name="title" placeholder="Titolo nota" required>
@@ -139,13 +140,20 @@ $assetVersion = substr(hash('sha256', (string) max(
           </div>
           <input type="hidden" name="body">
           <label class="check"><input name="archived" type="checkbox"> archivia subito</label>
-          <button>Salva nota</button>
         </form>
         <div id="notesList" class="cards"></div>
       </section>
+      <section class="page" data-page="notesArchive">
+        <div class="section-title"><h2>Archivio note</h2></div>
+        <div id="notesArchiveList" class="cards"></div>
+      </section>
       <section class="page" data-page="notifications">
-        <div class="section-title"><h2>Centro notifiche</h2><button id="markAllReadBtn" type="button">Segna tutte come lette</button></div>
+        <div class="section-title"><h2>Centro notifiche</h2><div class="actions-row"><button id="markAllReadBtn" type="button">Segna tutte come lette</button><button data-page-link="notificationsArchive"><span data-icon="note"></span> Archivio</button></div></div>
         <div id="notificationsList" class="cards"></div>
+      </section>
+      <section class="page" data-page="notificationsArchive">
+        <div class="section-title"><h2>Archivio notifiche</h2></div>
+        <div id="notificationsArchiveList" class="cards"></div>
       </section>
 
       <section class="page admin-only" data-page="settings">
@@ -192,9 +200,10 @@ $assetVersion = substr(hash('sha256', (string) max(
         <button>Aggiorna profilo</button>
       </form>
 
-      <div id="shoppingDetail" class="card modal-form hidden" data-modal-title="Dettaglio lista spesa">
+      <form id="shoppingDetail" class="card modal-form hidden" data-modal-title="Dettaglio lista spesa" data-modal-actions="crud">
+        <input type="hidden" name="id">
         <div id="shoppingDetailContent"></div>
-      </div>
+      </form>
       <div id="shoppingArchive" class="card modal-form hidden" data-modal-title="Archivio liste spesa">
         <div id="shoppingArchiveContent"></div>
       </div>

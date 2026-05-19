@@ -280,6 +280,8 @@ a { color: var(--primary-strong); font-weight: 800; text-decoration: none; }
   color: var(--primary-strong);
 }
 .modal-actions { display: flex; align-items: center; gap: .45rem; }
+.modal-actions .event-save { background: linear-gradient(135deg, var(--primary), var(--primary-strong)); color: #fff; box-shadow: 0 10px 24px #4d837233; }
+.shopping-product-picked { outline: 2px solid var(--primary-strong); }
 .parent-fields { display: grid; gap: .8rem; }
 .shopping-preview {
   display: flex;
