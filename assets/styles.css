@@ -214,6 +214,7 @@ a { color: var(--primary-strong); font-weight: 800; text-decoration: none; }
 }
 .check input[type="checkbox"] {
   appearance: none;
+  position: relative;
   cursor: pointer;
   width: 18px;
   height: 18px;
@@ -302,6 +303,7 @@ a { color: var(--primary-strong); font-weight: 800; text-decoration: none; }
 }
 .shopping-line input[type="checkbox"] {
   appearance: none;
+  position: relative;
   cursor: pointer;
   width: 18px;
   height: 18px;

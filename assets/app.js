@@ -173,7 +173,7 @@ function setupModalForms() {
   $$('.modal-form').forEach(form => {
     if (!form.querySelector('.modal-title')) {
       const actions = form.dataset.modalActions
-        ? `<div class="modal-actions"><button class="icon-btn event-save" type="submit" title="Salva" aria-label="Salva">${icon('save')}</button><button class="icon-btn event-delete hidden" type="button" title="Elimina" aria-label="Elimina">${icon('trash')}</button><button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button></div>`
+        ? `<div class="modal-actions"><button class="icon-btn event-edit hidden" type="button" title="Modifica" aria-label="Modifica">${icon('edit')}</button><button class="icon-btn event-save" type="submit" title="Salva" aria-label="Salva">${icon('save')}</button><button class="icon-btn event-delete hidden" type="button" title="Elimina" aria-label="Elimina">${icon('trash')}</button><button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button></div>`
         : `<button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button>`;
       form.insertAdjacentHTML('afterbegin', `<div class="modal-title"><h3>${esc(form.dataset.modalTitle || 'Modifica')}</h3>${actions}</div>`);
     }
@@ -407,14 +407,17 @@ async function deleteCurrentEvent() {
 }
 
 function renderShopping() {
-  $('#shoppingLists').innerHTML = state.data.shopping.map(l => `<article class="card shopping-preview" data-shopping-id="${l.id}"><div><h3>${esc(l.title)}</h3><p>${esc(formatDate(l.list_date))} · ${l.shared == 1 ? 'condivisa' : 'privata'} · ${l.archived_at ? 'archiviata' : 'attiva'}</p></div><button type="button" class="link-button" data-open-shopping="${l.id}">Dettaglio</button></article>`).join('');
+  const activeLists = state.data.shopping.filter(l => !l.archived_at);
+  const archivedLists = state.data.shopping.filter(l => !!l.archived_at);
+  $('#shoppingLists').innerHTML = activeLists.map(l => `<article class="card shopping-preview" data-shopping-id="${l.id}"><div><h3>${esc(l.title)}</h3><p>${esc(formatDate(l.list_date))} · ${l.shared == 1 ? 'condivisa' : 'privata'} · attiva</p></div><button type="button" class="link-button" data-open-shopping="${l.id}">Dettaglio</button></article>`).join('') || '<article class="card"><p>Nessuna lista attiva.</p></article>';
+  $('#shoppingArchiveContent').innerHTML = archivedLists.map(l => `<article class="card shopping-preview" data-shopping-id="${l.id}"><div><h3>${esc(l.title)}</h3><p>Archiviata · ${esc(formatDate(l.archived_at || l.list_date))}</p></div><button type="button" class="link-button" data-open-shopping="${l.id}">Apri</button></article>`).join('') || '<article class="card"><p>Archivio vuoto.</p></article>';
 }
 
 function openShoppingDetail(id) {
   const list = state.data.shopping.find(l => Number(l.id) === Number(id));
   if (!list) return;
   $('#shoppingDetail').querySelector('.modal-title h3').textContent = `${list.title} · ${formatDate(list.list_date)}`;
-  $('#shoppingDetailContent').innerHTML = `<div class="shopping-detail-list">${(list.items || []).map((item, index) => `<label class="shopping-line ${item.checked == 1 ? 'done' : ''}"><input type="checkbox" data-shopping-item="${index}" ${item.checked == 1 ? 'checked' : ''}><span>${esc(item.label)}</span></label>`).join('')}</div><div class="shopping-actions"><button type="button" class="link-button" data-edit-shopping="${list.id}">${icon('edit')} Modifica</button><button type="button" data-archive-list="${list.id}">Archivia lista</button></div>`;
+  $('#shoppingDetailContent').innerHTML = `<div class="shopping-detail-list">${(list.items || []).map((item, index) => `<label class="shopping-line ${item.checked == 1 ? 'done' : ''}"><input type="checkbox" data-shopping-item="${index}" ${item.checked == 1 ? 'checked' : ''}><span>${esc(item.label)}</span></label>`).join('')}</div><div class="shopping-actions"><button type="button" data-archive-list="${list.id}">${list.archived_at ? 'Già archiviata' : 'Archivia lista'}</button></div>`;
   $('#shoppingDetail').dataset.listId = list.id;
   openModal('shoppingDetail');
 }
@@ -453,8 +456,10 @@ function renderProfile() {
 
 function renderNotifications() {
   const unread = state.data.notifications.filter(n => !n.read_at).length;
+  const unreadItems = state.data.notifications.filter(n => !n.read_at);
+  const archivedItems = state.data.notifications.filter(n => !!n.read_at);
   $('#notifBadge').style.display = unread ? 'block' : 'none';
-  $('#notificationsList').innerHTML = state.data.notifications.map(n => `<article class="card"><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p><small>${esc(formatDate(n.created_at))} ${esc((n.created_at || '').slice(11, 16))} · ${n.read_at ? 'letta' : 'nuova'}</small></article>`).join('') || '<article class="card"><p>Nessuna notifica.</p></article>';
+  $('#notificationsList').innerHTML = `<article class="card"><h3>Nuove</h3>${unreadItems.map(n => `<p><strong>${esc(n.title)}</strong><br>${esc(n.body)}</p>`).join('') || '<p>Nessuna notifica nuova.</p>'}</article><article class="card"><h3>Archivio notifiche</h3>${archivedItems.map(n => `<p><strong>${esc(n.title)}</strong><br>${esc(n.body)}<br><small>${esc(formatDate(n.read_at))} ${esc((n.read_at || '').slice(11, 16))}</small></p>`).join('') || '<p>Nessuna notifica archiviata.</p>'}</article>`;
 }
 
 async function deleteFromModal(formId, action) {
@@ -492,6 +497,7 @@ document.addEventListener('click', async e => {
         f.reset();
         if (f.elements.id) f.elements.id.value = '';
         f.querySelector('.event-delete')?.classList.add('hidden');
+        f.querySelector('.event-edit')?.classList.add('hidden');
       }
     }
     openModal(open.dataset.open);
@@ -533,6 +539,7 @@ document.addEventListener('click', async e => {
       f.elements.shared.checked = Number(list.shared) === 1;
       f.elements.items.value = (list.items || []).map(i => i.label).join('\n');
       f.querySelector('.event-delete')?.classList.remove('hidden');
+      f.querySelector('.event-edit')?.classList.remove('hidden');
       openModal('shoppingForm');
     }
   }
@@ -550,6 +557,7 @@ document.addEventListener('click', async e => {
       f.elements.recurrence.value = r.recurrence || 'none';
       f.elements.shared.checked = Number(r.shared) === 1;
       f.querySelector('.event-delete')?.classList.remove('hidden');
+      f.querySelector('.event-edit')?.classList.remove('hidden');
       openModal('reminderForm');
     }
   }
@@ -564,6 +572,7 @@ document.addEventListener('click', async e => {
       f.querySelector('[data-wysiwyg-target="body"]').innerHTML = n.body || '';
       f.elements.archived.checked = !!n.archived_at;
       f.querySelector('.event-delete')?.classList.remove('hidden');
+      f.querySelector('.event-edit')?.classList.remove('hidden');
       openModal('noteForm');
     }
   }
@@ -583,6 +592,7 @@ document.addEventListener('click', async e => {
       f.elements.recurrence.value = t.recurrence || 'none';
       f.elements.notes.value = t.notes || '';
       f.querySelector('.event-delete')?.classList.remove('hidden');
+      f.querySelector('.event-edit')?.classList.remove('hidden');
       openModal('familyForm');
     }
   }

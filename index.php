@@ -84,7 +84,7 @@ $assetVersion = substr(hash('sha256', (string) max(
       </section>
 
       <section class="page" data-page="shopping">
-        <div class="section-title"><h2>Lista spesa</h2><button data-open="shoppingForm"><span data-icon="plus"></span> Lista</button></div>
+        <div class="section-title"><h2>Lista spesa</h2><div class="actions-row"><button data-open="shoppingForm"><span data-icon="plus"></span> Lista</button><button data-open="shoppingArchive"><span data-icon="note"></span> Archivio</button></div></div>
         <form id="shoppingForm" class="card form-card modal-form hidden" data-modal-title="Nuova lista spesa" data-modal-actions="crud">
           <input type="hidden" name="id">
           <input name="title" placeholder="Nome lista" value="Spesa">
@@ -194,6 +194,9 @@ $assetVersion = substr(hash('sha256', (string) max(
 
       <div id="shoppingDetail" class="card modal-form hidden" data-modal-title="Dettaglio lista spesa">
         <div id="shoppingDetailContent"></div>
+      </div>
+      <div id="shoppingArchive" class="card modal-form hidden" data-modal-title="Archivio liste spesa">
+        <div id="shoppingArchiveContent"></div>
       </div>
 
       <form id="widgetForm" class="card form-card modal-form hidden" data-modal-title="Widget dashboard">

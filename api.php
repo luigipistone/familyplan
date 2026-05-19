@@ -289,7 +289,7 @@ function shopping(string $method): void
             db()->prepare('INSERT INTO shopping_lists (title, list_date, owner_id, shared) VALUES (?, ?, ?, ?)')->execute([clean_string($d['title'] ?? 'Spesa', 160), ($d['list_date'] ?? null) ?: date('Y-m-d'), $user['id'], !empty($d['shared']) ? 1 : 0]);
             $id = (int) db()->lastInsertId();
         } else {
-            db()->prepare('UPDATE shopping_lists SET title=?, list_date=?, shared=? WHERE id=? AND owner_id=?')->execute([clean_string($d['title'] ?? 'Spesa', 160), ($d['list_date'] ?? null) ?: date('Y-m-d'), !empty($d['shared']) ? 1 : 0, $id, $user['id']]);
+            db()->prepare('UPDATE shopping_lists SET title=?, list_date=?, shared=?, archived_at=NULL WHERE id=? AND owner_id=?')->execute([clean_string($d['title'] ?? 'Spesa', 160), ($d['list_date'] ?? null) ?: date('Y-m-d'), !empty($d['shared']) ? 1 : 0, $id, $user['id']]);
             db()->prepare('DELETE FROM shopping_items WHERE list_id=?')->execute([$id]);
         }
         $stmt = db()->prepare('INSERT INTO shopping_items (list_id, label, checked) VALUES (?, ?, ?)');
