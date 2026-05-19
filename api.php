@@ -276,6 +276,10 @@ function shopping(string $method): void
     if ($method === 'POST') {
         $d = request_json();
         $id = (int) ($d['id'] ?? 0);
+        if (!empty($d['delete']) && $id > 0) {
+            db()->prepare('DELETE FROM shopping_lists WHERE id=? AND owner_id=?')->execute([$id, $user['id']]);
+            json_response(['ok' => true]);
+        }
         if (!empty($d['archive'])) {
             db()->prepare("UPDATE shopping_lists SET archived_at=NOW() WHERE id=? AND (owner_id=? OR ? IN (SELECT id FROM users WHERE role='admin'))")->execute([$id, $user['id'], $user['id']]);
             notify_users(all_user_ids(), 'shopping', 'Lista archiviata', $user['name'] . ' ha archiviato una lista.', (int) $user['id']);
@@ -311,6 +315,10 @@ function family_day(string $method): void
     if ($method === 'POST') {
         $d = request_json();
         $id = (int) ($d['id'] ?? 0);
+        if (!empty($d['delete']) && $id > 0) {
+            db()->prepare('DELETE FROM family_tasks WHERE id=? AND created_by=?')->execute([$id, $user['id']]);
+            json_response(['ok' => true]);
+        }
         if ($id > 0) {
             db()->prepare('UPDATE family_tasks SET child_id=?, assignee_id=?, task_date=?, task_time=?, type=?, notes=?, recurrence=? WHERE id=? AND created_by=?')
                 ->execute([(int) $d['child_id'], !empty($d['assignee_id']) ? (int) $d['assignee_id'] : null, $d['task_date'] ?? date('Y-m-d'), ($d['task_time'] ?? null) ?: null, clean_string($d['type'] ?? 'impegno', 80), clean_string($d['notes'] ?? '', 1000), in_array(($d['recurrence'] ?? 'none'), ['none', 'daily', 'weekly', 'monthly'], true) ? $d['recurrence'] : 'none', $id, $user['id']]);
@@ -345,6 +353,10 @@ function reminders(string $method): void
     if ($method === 'POST') {
         $d = request_json();
         $id = (int) ($d['id'] ?? 0);
+        if (!empty($d['delete']) && $id > 0) {
+            db()->prepare('DELETE FROM reminders WHERE id=? AND owner_id=?')->execute([$id, $user['id']]);
+            json_response(['ok' => true]);
+        }
         if ($id > 0) {
             db()->prepare('UPDATE reminders SET title=?, due_at=?, recurrence=?, shared=?, completed_at=? WHERE id=? AND owner_id=?')
                 ->execute([clean_string($d['title'] ?? '', 180), ($d['due_at'] ?? null) ?: null, clean_string($d['recurrence'] ?? 'none', 30), !empty($d['shared']) ? 1 : 0, !empty($d['completed']) ? date('Y-m-d H:i:s') : null, $id, $user['id']]);
@@ -369,6 +381,10 @@ function notes(string $method): void
     if ($method === 'POST') {
         $d = request_json();
         $id = (int) ($d['id'] ?? 0);
+        if (!empty($d['delete']) && $id > 0) {
+            db()->prepare('DELETE FROM notes WHERE id=? AND owner_id=?')->execute([$id, $user['id']]);
+            json_response(['ok' => true]);
+        }
         if ($id > 0) {
             db()->prepare('UPDATE notes SET title=?, body=?, archived_at=? WHERE id=? AND owner_id=?')
                 ->execute([clean_string($d['title'] ?? '', 160), clean_string($d['body'] ?? '', 5000), !empty($d['archived']) ? date('Y-m-d H:i:s') : null, $id, $user['id']]);

@@ -172,8 +172,8 @@ function setupConditionalFields() {
 function setupModalForms() {
   $$('.modal-form').forEach(form => {
     if (!form.querySelector('.modal-title')) {
-      const actions = form.dataset.modalActions === 'event'
-        ? `<div class="modal-actions"><button class="icon-btn event-save" type="submit" title="Salva evento" aria-label="Salva evento">${icon('save')}</button><button class="icon-btn event-delete hidden" type="button" title="Elimina evento" aria-label="Elimina evento">${icon('trash')}</button><button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button></div>`
+      const actions = form.dataset.modalActions
+        ? `<div class="modal-actions"><button class="icon-btn event-save" type="submit" title="Salva" aria-label="Salva">${icon('save')}</button><button class="icon-btn event-delete hidden" type="button" title="Elimina" aria-label="Elimina">${icon('trash')}</button><button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button></div>`
         : `<button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button>`;
       form.insertAdjacentHTML('afterbegin', `<div class="modal-title"><h3>${esc(form.dataset.modalTitle || 'Modifica')}</h3>${actions}</div>`);
     }
@@ -457,6 +457,16 @@ function renderNotifications() {
   $('#notificationsList').innerHTML = state.data.notifications.map(n => `<article class="card"><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p><small>${esc(formatDate(n.created_at))} ${esc((n.created_at || '').slice(11, 16))} · ${n.read_at ? 'letta' : 'nuova'}</small></article>`).join('') || '<article class="card"><p>Nessuna notifica.</p></article>';
 }
 
+async function deleteFromModal(formId, action) {
+  const form = $('#' + formId);
+  const id = Number(form?.elements?.id?.value || 0);
+  if (!id) return;
+  await api(action, { method: 'POST', body: JSON.stringify({ id, delete: true }) });
+  closeModal(true);
+  toast('Eliminato');
+  await loadAll();
+}
+
 async function saveForm(form, action, transform = x => x) {
   const payload = transform(formData(form));
   await api(action, { method: 'POST', body: JSON.stringify(payload) });
@@ -476,6 +486,14 @@ document.addEventListener('click', async e => {
   const open = e.target.closest('[data-open]');
   if (open) {
     if (open.dataset.open === 'eventForm') $('#eventForm').reset();
+    if (['shoppingForm', 'familyForm', 'reminderForm', 'noteForm'].includes(open.dataset.open)) {
+      const f = $('#' + open.dataset.open);
+      if (f) {
+        f.reset();
+        if (f.elements.id) f.elements.id.value = '';
+        f.querySelector('.event-delete')?.classList.add('hidden');
+      }
+    }
     openModal(open.dataset.open);
     setupConditionalFields();
   }
@@ -514,6 +532,7 @@ document.addEventListener('click', async e => {
       f.elements.list_date.value = list.list_date || today();
       f.elements.shared.checked = Number(list.shared) === 1;
       f.elements.items.value = (list.items || []).map(i => i.label).join('\n');
+      f.querySelector('.event-delete')?.classList.remove('hidden');
       openModal('shoppingForm');
     }
   }
@@ -530,6 +549,7 @@ document.addEventListener('click', async e => {
       f.elements.due_minute.value = dt.minute;
       f.elements.recurrence.value = r.recurrence || 'none';
       f.elements.shared.checked = Number(r.shared) === 1;
+      f.querySelector('.event-delete')?.classList.remove('hidden');
       openModal('reminderForm');
     }
   }
@@ -543,6 +563,7 @@ document.addEventListener('click', async e => {
       f.elements.body.value = n.body || '';
       f.querySelector('[data-wysiwyg-target="body"]').innerHTML = n.body || '';
       f.elements.archived.checked = !!n.archived_at;
+      f.querySelector('.event-delete')?.classList.remove('hidden');
       openModal('noteForm');
     }
   }
@@ -561,6 +582,7 @@ document.addEventListener('click', async e => {
       f.elements.type.value = t.type || '';
       f.elements.recurrence.value = t.recurrence || 'none';
       f.elements.notes.value = t.notes || '';
+      f.querySelector('.event-delete')?.classList.remove('hidden');
       openModal('familyForm');
     }
   }
@@ -569,7 +591,14 @@ document.addEventListener('click', async e => {
     location.reload();
   }
   const deleteEvent = e.target.closest('.event-delete');
-  if (deleteEvent) await deleteCurrentEvent();
+  if (deleteEvent) {
+    const form = deleteEvent.closest('form');
+    if (form?.id === 'eventForm') await deleteCurrentEvent();
+    if (form?.id === 'reminderForm') await deleteFromModal('reminderForm', 'reminders');
+    if (form?.id === 'noteForm') await deleteFromModal('noteForm', 'notes');
+    if (form?.id === 'shoppingForm') await deleteFromModal('shoppingForm', 'shopping');
+    if (form?.id === 'familyForm') await deleteFromModal('familyForm', 'family');
+  }
   if (e.target.id === 'profileBtn' || e.target.closest('#profileBtn')) openModal('profileForm');
   if (e.target.id === 'widgetBtn' || e.target.closest('#widgetBtn')) openModal('widgetForm');
   if (e.target.id === 'themeToggle' || e.target.closest('#themeToggle')) {
@@ -581,6 +610,11 @@ document.addEventListener('click', async e => {
     navigateTo('notifications');
     await api('notifications', { method: 'POST', body: '{}' });
     await loadAll();
+  }
+  if (e.target.id === 'markAllReadBtn' || e.target.closest('#markAllReadBtn')) {
+    await api('notifications', { method: 'POST', body: '{}' });
+    await loadAll();
+    toast('Notifiche segnate come lette');
   }
 });
 

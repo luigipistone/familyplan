@@ -85,7 +85,7 @@ $assetVersion = substr(hash('sha256', (string) max(
 
       <section class="page" data-page="shopping">
         <div class="section-title"><h2>Lista spesa</h2><button data-open="shoppingForm"><span data-icon="plus"></span> Lista</button></div>
-        <form id="shoppingForm" class="card form-card modal-form hidden" data-modal-title="Nuova lista spesa">
+        <form id="shoppingForm" class="card form-card modal-form hidden" data-modal-title="Nuova lista spesa" data-modal-actions="crud">
           <input type="hidden" name="id">
           <input name="title" placeholder="Nome lista" value="Spesa">
           <input name="list_date" type="date">
@@ -99,7 +99,7 @@ $assetVersion = substr(hash('sha256', (string) max(
 
       <section class="page" data-page="family">
         <div class="section-title"><h2>Famiglia e figli</h2><div class="actions-row"><button data-open="familyForm"><span data-icon="plus"></span> Impegno</button></div></div>
-        <form id="familyForm" class="card form-card modal-form hidden" data-modal-title="Nuovo impegno figli">
+        <form id="familyForm" class="card form-card modal-form hidden" data-modal-title="Nuovo impegno figli" data-modal-actions="crud">
           <input type="hidden" name="id">
           <select name="child_id" data-users="children" required></select>
           <select name="assignee_id" data-users="all"><option value="">Da assegnare</option></select>
@@ -116,7 +116,7 @@ $assetVersion = substr(hash('sha256', (string) max(
 
       <section class="page" data-page="reminders">
         <div class="section-title"><h2>Promemoria</h2><button data-open="reminderForm"><span data-icon="plus"></span> Promemoria</button></div>
-        <form id="reminderForm" class="card form-card modal-form hidden" data-modal-title="Nuovo promemoria">
+        <form id="reminderForm" class="card form-card modal-form hidden" data-modal-title="Nuovo promemoria" data-modal-actions="crud">
           <input type="hidden" name="id">
           <input name="title" placeholder="Promemoria" required>
           <input type="hidden" name="due_at">
@@ -130,7 +130,7 @@ $assetVersion = substr(hash('sha256', (string) max(
 
       <section class="page" data-page="notes">
         <div class="section-title"><h2>Note</h2><button data-open="noteForm"><span data-icon="plus"></span> Nota</button></div>
-        <form id="noteForm" class="card form-card modal-form hidden" data-modal-title="Nuova nota">
+        <form id="noteForm" class="card form-card modal-form hidden" data-modal-title="Nuova nota" data-modal-actions="crud">
           <input type="hidden" name="id">
           <input name="title" placeholder="Titolo nota" required>
           <div class="wysiwyg-wrap">
@@ -144,7 +144,7 @@ $assetVersion = substr(hash('sha256', (string) max(
         <div id="notesList" class="cards"></div>
       </section>
       <section class="page" data-page="notifications">
-        <div class="section-title"><h2>Centro notifiche</h2></div>
+        <div class="section-title"><h2>Centro notifiche</h2><button id="markAllReadBtn" type="button">Segna tutte come lette</button></div>
         <div id="notificationsList" class="cards"></div>
       </section>
 
