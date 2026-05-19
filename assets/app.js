@@ -8,9 +8,6 @@ const pageDefs = {
   reminders: ['Promemoria', 'bell'],
   notes: ['Note', 'note'],
   notifications: ['Notifiche', 'bell'],
-  remindersArchive: ['Archivio promemoria', 'note'],
-  notesArchive: ['Archivio note', 'note'],
-  notificationsArchive: ['Archivio notifiche', 'note'],
   settings: ['Impostazioni', 'settings'],
   users: ['Utenti', 'users'],
 };
@@ -176,7 +173,7 @@ function setupModalForms() {
   $$('.modal-form').forEach(form => {
     if (!form.querySelector('.modal-title')) {
       const actions = form.dataset.modalActions
-        ? `<div class="modal-actions"><button class="icon-btn event-edit hidden" type="button" title="Modifica" aria-label="Modifica">${icon('edit')}</button><button class="icon-btn event-save" type="submit" title="Salva" aria-label="Salva">${icon('save')}</button><button class="icon-btn event-delete hidden" type="button" title="Elimina" aria-label="Elimina">${icon('trash')}</button><button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button></div>`
+        ? `<div class="modal-actions">${form.dataset.modalActions === 'crud-noedit' ? '' : `<button class="icon-btn event-edit hidden" type="button" title="Modifica" aria-label="Modifica">${icon('edit')}</button>`}<button class="icon-btn event-save" type="submit" title="Salva" aria-label="Salva">${icon('save')}</button><button class="icon-btn event-delete hidden" type="button" title="Elimina" aria-label="Elimina">${icon('trash')}</button><button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button></div>`
         : `<button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button>`;
       form.insertAdjacentHTML('afterbegin', `<div class="modal-title"><h3>${esc(form.dataset.modalTitle || 'Modifica')}</h3>${actions}</div>`);
     }
