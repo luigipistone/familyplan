@@ -253,12 +253,16 @@ function allowedPages() {
   return Object.keys(pageDefs).filter(p => !['settings', 'users'].includes(p) || state.user.role === 'admin');
 }
 
+function navPages() {
+  return allowedPages().filter(page => !page.endsWith('Archive'));
+}
+
 function allowedWidgets() {
   return Object.keys(widgetDefs);
 }
 
 function renderNav() {
-  $('#pageNav').innerHTML = allowedPages().map(page => `<a href="?page=${page}" data-page-link="${page}">${icon(pageDefs[page][1])}<span>${pageDefs[page][0]}</span></a>`).join('');
+  $('#pageNav').innerHTML = navPages().map(page => `<a href="?page=${page}" data-page-link="${page}">${icon(pageDefs[page][1])}<span>${pageDefs[page][0]}</span></a>`).join('');
   $$('.admin-only').forEach(e => e.classList.toggle('hidden', state.user.role !== 'admin'));
 }
 
