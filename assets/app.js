@@ -461,8 +461,22 @@ function renderReminders() {
 function renderNotes() {
   const active = state.data.notes.filter(n => !n.archived_at);
   const archived = state.data.notes.filter(n => !!n.archived_at);
-  $('#notesList').innerHTML = active.map(n => `<article class="card" data-edit-note="${n.id}"><h3>${esc(n.title)}</h3><p>${n.body || ''}</p><small>Attiva</small></article>`).join('') || '<article class="card"><p>Nessuna nota attiva.</p></article>';
-  $('#notesArchiveList').innerHTML = archived.map(n => `<article class="card" data-edit-note="${n.id}"><h3>${esc(n.title)}</h3><p>${n.body || ''}</p><small>Archiviata</small></article>`).join('') || '<article class="card"><p>Archivio note vuoto.</p></article>';
+  $('#notesList').innerHTML = active.map(n => `<article class="card" data-edit-note="${n.id}" role="button" tabindex="0"><h3>${esc(n.title)}</h3><p>${n.body || ''}</p><small>Attiva</small></article>`).join('') || '<article class="card"><p>Nessuna nota attiva.</p></article>';
+  $('#notesArchiveList').innerHTML = archived.map(n => `<article class="card" data-edit-note="${n.id}" role="button" tabindex="0"><h3>${esc(n.title)}</h3><p>${n.body || ''}</p><small>Archiviata</small></article>`).join('') || '<article class="card"><p>Archivio note vuoto.</p></article>';
+}
+
+function openNoteEditor(note) {
+  const f = $('#noteForm');
+  f.elements.id.value = note.id;
+  f.elements.title.value = note.title || '';
+  f.elements.body.value = note.body || '';
+  f.querySelector('[data-wysiwyg-target="body"]').innerHTML = note.body || '';
+  f.elements.archived.checked = !!note.archived_at;
+  f.querySelector('.event-delete')?.classList.remove('hidden');
+  f.querySelector('.event-edit')?.classList.add('hidden');
+  f.querySelector('.event-save')?.setAttribute('title', 'Salva');
+  f.querySelector('.event-save')?.setAttribute('aria-label', 'Salva');
+  openModal('noteForm');
 }
 
 function renderUsers() {
@@ -520,11 +534,11 @@ document.addEventListener('click', async e => {
     e.stopPropagation();
     const form = deleteBtn.closest('form');
     if (form?.id === 'eventForm') return deleteCurrentEvent();
-    if (form?.id === 'reminderForm') return deleteFromModal('reminderForm', 'reminders');
-    if (form?.id === 'noteForm') return deleteFromModal('noteForm', 'notes');
-    if (form?.id === 'shoppingForm') return deleteFromModal('shoppingForm', 'shopping');
-    if (form?.id === 'shoppingDetail') return deleteFromModal('shoppingDetail', 'shopping');
-    if (form?.id === 'familyForm') return deleteFromModal('familyForm', 'family');
+    if (form?.id === 'reminderForm') return await deleteFromModal('reminderForm', 'reminders');
+    if (form?.id === 'noteForm') return await deleteFromModal('noteForm', 'notes');
+    if (form?.id === 'shoppingForm') return await deleteFromModal('shoppingForm', 'shopping');
+    if (form?.id === 'shoppingDetail') return await deleteFromModal('shoppingDetail', 'shopping');
+    if (form?.id === 'familyForm') return await deleteFromModal('familyForm', 'family');
   }
 
   const shoppingArchive = e.target.closest('#shoppingDetail .event-edit');
@@ -626,21 +640,7 @@ document.addEventListener('click', async e => {
   const editNote = e.target.closest('[data-edit-note]');
   if (editNote) {
     const n = state.data.notes.find(v => Number(v.id) === Number(editNote.dataset.editNote));
-    if (n) {
-      const f = $('#noteForm');
-      f.elements.id.value = n.id;
-      f.elements.title.value = n.title || '';
-      f.elements.body.value = n.body || '';
-      f.querySelector('[data-wysiwyg-target="body"]').innerHTML = n.body || '';
-      f.elements.archived.checked = !!n.archived_at;
-      f.querySelector('.event-delete')?.classList.remove('hidden');
-      f.querySelector('.event-edit')?.classList.add('hidden');
-      f.querySelector('.event-save')?.setAttribute('title', 'Salva');
-      f.querySelector('.event-save')?.setAttribute('aria-label', 'Salva');
-      const noteSave = f.querySelector('.event-save');
-      if (noteSave) noteSave.dataset.mode = 'save';
-      openModal('noteForm');
-    }
+    if (n) openNoteEditor(n);
   }
   const editFamily = e.target.closest('[data-edit-family]');
   if (editFamily) {
