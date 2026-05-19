@@ -83,7 +83,7 @@ $assetVersion = substr(hash('sha256', (string) max(
       </section>
 
       <section class="page" data-page="shopping">
-        <div class="section-title"><h2>Lista spesa</h2><div class="actions-row"><button data-open="shoppingForm"><span data-icon="plus"></span> Lista</button><button data-open="shoppingArchive"><span data-icon="note"></span> Archivio</button></div></div>
+        <div class="section-title"><h2>Lista spesa</h2><div class="actions-row"><button data-open="shoppingForm"><span data-icon="plus"></span> Lista</button><button data-page-link="shoppingArchive"><span data-icon="note"></span> Archivio</button></div></div>
         <form id="shoppingForm" class="card form-card modal-form hidden" data-modal-title="Nuova lista spesa" data-modal-actions="crud-noedit">
           <input type="hidden" name="id">
           <input name="title" placeholder="Nome lista" value="Spesa">
@@ -113,7 +113,7 @@ $assetVersion = substr(hash('sha256', (string) max(
       </section>
 
       <section class="page" data-page="reminders">
-        <div class="section-title"><h2>Promemoria</h2><div class="actions-row"><button data-open="reminderForm"><span data-icon="plus"></span> Promemoria</button></div></div>
+        <div class="section-title"><h2>Promemoria</h2><div class="actions-row"><button data-open="reminderForm"><span data-icon="plus"></span> Promemoria</button><button data-page-link="remindersArchive"><span data-icon="note"></span> Archivio</button></div></div>
         <form id="reminderForm" class="card form-card modal-form hidden" data-modal-title="Nuovo promemoria" data-modal-actions="crud-noedit">
           <input type="hidden" name="id">
           <input name="title" placeholder="Promemoria" required>
@@ -130,7 +130,7 @@ $assetVersion = substr(hash('sha256', (string) max(
       </section>
 
       <section class="page" data-page="notes">
-        <div class="section-title"><h2>Note</h2><div class="actions-row"><button data-open="noteForm"><span data-icon="plus"></span> Nota</button></div></div>
+        <div class="section-title"><h2>Note</h2><div class="actions-row"><button data-open="noteForm"><span data-icon="plus"></span> Nota</button><button data-page-link="notesArchive"><span data-icon="note"></span> Archivio</button></div></div>
         <form id="noteForm" class="card form-card modal-form hidden" data-modal-title="Nuova nota" data-modal-actions="crud-noedit">
           <input type="hidden" name="id">
           <input name="title" placeholder="Titolo nota" required>
@@ -204,9 +204,10 @@ $assetVersion = substr(hash('sha256', (string) max(
         <input type="hidden" name="id">
         <div id="shoppingDetailContent"></div>
       </form>
-      <div id="shoppingArchive" class="card modal-form hidden" data-modal-title="Archivio liste spesa">
-        <div id="shoppingArchiveContent"></div>
-      </div>
+      <section class="page" data-page="shoppingArchive">
+        <div class="section-title"><h2>Archivio liste spesa</h2></div>
+        <div id="shoppingArchiveContent" class="cards"></div>
+      </section>
 
       <form id="widgetForm" class="card form-card modal-form hidden" data-modal-title="Widget dashboard">
         <div id="widgetChoices" class="widget-choices"></div>

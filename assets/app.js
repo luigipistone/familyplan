@@ -8,6 +8,9 @@ const pageDefs = {
   reminders: ['Promemoria', 'bell'],
   notes: ['Note', 'note'],
   notifications: ['Notifiche', 'bell'],
+  shoppingArchive: ['Archivio spesa', 'shopping'],
+  remindersArchive: ['Archivio promemoria', 'bell'],
+  notesArchive: ['Archivio note', 'note'],
   settings: ['Impostazioni', 'settings'],
   users: ['Utenti', 'users'],
 };
@@ -422,8 +425,8 @@ function openShoppingDetail(id) {
   form.querySelector('.event-edit')?.classList.remove('hidden');
   form.querySelector('.event-delete')?.classList.remove('hidden');
   form.querySelector('.event-save')?.classList.remove('hidden');
-  form.querySelector('.event-save')?.setAttribute('title', list.archived_at ? 'Ripristina' : 'Archivia');
-  form.querySelector('.event-save')?.setAttribute('aria-label', list.archived_at ? 'Ripristina' : 'Archivia');
+  form.querySelector('.event-save')?.setAttribute('title', 'Salva');
+  form.querySelector('.event-save')?.setAttribute('aria-label', 'Salva');
   $('#shoppingDetailContent').innerHTML = `<div class="shopping-detail-list">${(list.items || []).map((item, index) => `<label class="shopping-line ${item.checked == 1 ? 'done' : ''}"><input type="checkbox" data-shopping-item="${index}" ${item.checked == 1 ? 'checked' : ''}><span>${esc(item.label)}</span></label>`).join('')}</div>`;
   form.dataset.listId = list.id;
   openModal('shoppingDetail');
@@ -571,7 +574,11 @@ document.addEventListener('click', async e => {
       f.elements.recurrence.value = r.recurrence || 'none';
       f.elements.shared.checked = Number(r.shared) === 1;
       f.querySelector('.event-delete')?.classList.remove('hidden');
-      f.querySelector('.event-edit')?.classList.remove('hidden');
+      f.querySelector('.event-edit')?.classList.add('hidden');
+      f.querySelector('.event-save')?.setAttribute('title', 'Salva');
+      f.querySelector('.event-save')?.setAttribute('aria-label', 'Salva');
+      const reminderSave = f.querySelector('.event-save');
+      if (reminderSave) reminderSave.dataset.mode = 'save';
       openModal('reminderForm');
     }
   }
@@ -586,7 +593,11 @@ document.addEventListener('click', async e => {
       f.querySelector('[data-wysiwyg-target="body"]').innerHTML = n.body || '';
       f.elements.archived.checked = !!n.archived_at;
       f.querySelector('.event-delete')?.classList.remove('hidden');
-      f.querySelector('.event-edit')?.classList.remove('hidden');
+      f.querySelector('.event-edit')?.classList.add('hidden');
+      f.querySelector('.event-save')?.setAttribute('title', 'Salva');
+      f.querySelector('.event-save')?.setAttribute('aria-label', 'Salva');
+      const noteSave = f.querySelector('.event-save');
+      if (noteSave) noteSave.dataset.mode = 'save';
       openModal('noteForm');
     }
   }
@@ -641,23 +652,17 @@ document.addEventListener('click', async e => {
     await loadAll();
     toast('Notifiche segnate come lette');
   }
-  const editInDetail = e.target.closest('#shoppingDetail .event-edit');
-  if (editInDetail) {
-    const list = state.data.shopping.find(l => Number(l.id) === Number($('#shoppingDetail').elements.id.value));
-    if (list) {
-      const f = $('#shoppingForm');
-      f.elements.id.value = list.id;
-      f.elements.title.value = list.title || '';
-      f.elements.list_date.value = list.list_date || today();
-      f.elements.shared.checked = Number(list.shared) === 1;
-      f.elements.items.value = (list.items || []).map(i => i.label).join('\n');
-      f.querySelector('.event-delete')?.classList.remove('hidden');
-      f.querySelector('.event-edit')?.classList.remove('hidden');
-      openModal('shoppingForm');
-    }
-  }
   const archiveToggleInDetail = e.target.closest('#shoppingDetail .event-save');
   if (archiveToggleInDetail) {
+    const list = state.data.shopping.find(l => Number(l.id) === Number($('#shoppingDetail').elements.id.value));
+    if (list) {
+      await api('shopping', { method: 'POST', body: JSON.stringify({ id: list.id, title: list.title, list_date: list.list_date, shared: Number(list.shared) === 1, items: list.items }) });
+      await loadAll();
+      openShoppingDetail(list.id);
+    }
+  }
+  const shoppingArchive = e.target.closest('#shoppingDetail .event-edit');
+  if (shoppingArchive) {
     const list = state.data.shopping.find(l => Number(l.id) === Number($('#shoppingDetail').elements.id.value));
     if (list) {
       if (list.archived_at) {
@@ -666,7 +671,7 @@ document.addEventListener('click', async e => {
         await api('shopping', { method: 'POST', body: JSON.stringify({ id: list.id, archive: true }) });
       }
       await loadAll();
-      closeModal(true);
+      openShoppingDetail(list.id);
     }
   }
 });

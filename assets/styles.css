@@ -290,6 +290,7 @@ a { color: var(--primary-strong); font-weight: 800; text-decoration: none; }
   gap: .8rem;
   cursor: pointer;
 }
+#remindersList .card, #notesList .card { cursor: pointer; }
 .shopping-detail-list { display: grid; gap: .55rem; }
 .shopping-line {
   display: grid;
