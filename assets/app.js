@@ -494,6 +494,16 @@ async function deleteFromModal(formId, action) {
   await loadAll();
 }
 
+async function archiveToggleFromModal(formId, action, payloadBuilder) {
+  const form = $('#' + formId);
+  const id = Number(form?.elements?.id?.value || 0);
+  if (!id) return;
+  const payload = payloadBuilder();
+  await api(action, { method: 'POST', body: JSON.stringify(payload) });
+  toast('Aggiornato');
+  await loadAll();
+}
+
 async function saveForm(form, action, transform = x => x) {
   const payload = transform(formData(form));
   await api(action, { method: 'POST', body: JSON.stringify(payload) });
@@ -504,6 +514,32 @@ async function saveForm(form, action, transform = x => x) {
 }
 
 document.addEventListener('click', async e => {
+  const deleteBtn = e.target.closest('.event-delete');
+  if (deleteBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    const form = deleteBtn.closest('form');
+    if (form?.id === 'eventForm') return deleteCurrentEvent();
+    if (form?.id === 'reminderForm') return deleteFromModal('reminderForm', 'reminders');
+    if (form?.id === 'noteForm') return deleteFromModal('noteForm', 'notes');
+    if (form?.id === 'shoppingForm') return deleteFromModal('shoppingForm', 'shopping');
+    if (form?.id === 'shoppingDetail') return deleteFromModal('shoppingDetail', 'shopping');
+    if (form?.id === 'familyForm') return deleteFromModal('familyForm', 'family');
+  }
+
+  const shoppingArchive = e.target.closest('#shoppingDetail .event-edit');
+  if (shoppingArchive) {
+    e.preventDefault();
+    e.stopPropagation();
+    const list = state.data.shopping.find(l => Number(l.id) === Number($('#shoppingDetail').elements.id.value));
+    if (!list) return;
+    return archiveToggleFromModal('shoppingDetail', 'shopping', () => (
+      list.archived_at
+        ? { id: list.id, title: list.title, list_date: list.list_date, shared: Number(list.shared) === 1, items: list.items }
+        : { id: list.id, archive: true }
+    )).then(() => openShoppingDetail(list.id));
+  }
+
   const pageLink = e.target.closest('[data-page-link]');
   if (pageLink) {
     e.preventDefault();
@@ -630,16 +666,6 @@ document.addEventListener('click', async e => {
     await api('logout', { method: 'POST', body: '{}' });
     location.reload();
   }
-  const deleteEvent = e.target.closest('.event-delete');
-  if (deleteEvent) {
-    const form = deleteEvent.closest('form');
-    if (form?.id === 'eventForm') await deleteCurrentEvent();
-    if (form?.id === 'reminderForm') await deleteFromModal('reminderForm', 'reminders');
-    if (form?.id === 'noteForm') await deleteFromModal('noteForm', 'notes');
-    if (form?.id === 'shoppingForm') await deleteFromModal('shoppingForm', 'shopping');
-    if (form?.id === 'shoppingDetail') await deleteFromModal('shoppingDetail', 'shopping');
-    if (form?.id === 'familyForm') await deleteFromModal('familyForm', 'family');
-  }
   if (e.target.id === 'profileBtn' || e.target.closest('#profileBtn')) openModal('profileForm');
   if (e.target.id === 'widgetBtn' || e.target.closest('#widgetBtn')) openModal('widgetForm');
   if (e.target.id === 'themeToggle' || e.target.closest('#themeToggle')) {
@@ -662,19 +688,6 @@ document.addEventListener('click', async e => {
     const list = state.data.shopping.find(l => Number(l.id) === Number($('#shoppingDetail').elements.id.value));
     if (list) {
       await api('shopping', { method: 'POST', body: JSON.stringify({ id: list.id, title: list.title, list_date: list.list_date, shared: Number(list.shared) === 1, items: list.items }) });
-      await loadAll();
-      openShoppingDetail(list.id);
-    }
-  }
-  const shoppingArchive = e.target.closest('#shoppingDetail .event-edit');
-  if (shoppingArchive) {
-    const list = state.data.shopping.find(l => Number(l.id) === Number($('#shoppingDetail').elements.id.value));
-    if (list) {
-      if (list.archived_at) {
-        await api('shopping', { method: 'POST', body: JSON.stringify({ id: list.id, title: list.title, list_date: list.list_date, shared: Number(list.shared) === 1, items: list.items }) });
-      } else {
-        await api('shopping', { method: 'POST', body: JSON.stringify({ id: list.id, archive: true }) });
-      }
       await loadAll();
       openShoppingDetail(list.id);
     }
