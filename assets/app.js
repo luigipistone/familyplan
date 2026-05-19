@@ -487,6 +487,7 @@ async function deleteFromModal(formId, action) {
   const form = $('#' + formId);
   const id = Number(form?.elements?.id?.value || 0);
   if (!id) return;
+  if (!confirm('Eliminare questo elemento?')) return;
   await api(action, { method: 'POST', body: JSON.stringify({ id, delete: true }) });
   closeModal(true);
   toast('Eliminato');
@@ -636,7 +637,7 @@ document.addEventListener('click', async e => {
     if (form?.id === 'reminderForm') await deleteFromModal('reminderForm', 'reminders');
     if (form?.id === 'noteForm') await deleteFromModal('noteForm', 'notes');
     if (form?.id === 'shoppingForm') await deleteFromModal('shoppingForm', 'shopping');
-    if (form?.id === 'shoppingDetail') await api('shopping', { method: 'POST', body: JSON.stringify({ id: Number(form.elements.id.value || 0), delete: true }) }).then(loadAll).then(()=>closeModal(true));
+    if (form?.id === 'shoppingDetail') await deleteFromModal('shoppingDetail', 'shopping');
     if (form?.id === 'familyForm') await deleteFromModal('familyForm', 'family');
   }
   if (e.target.id === 'profileBtn' || e.target.closest('#profileBtn')) openModal('profileForm');
