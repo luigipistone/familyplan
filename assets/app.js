@@ -508,6 +508,26 @@ async function deleteFromModal(formId, action) {
   await loadAll();
 }
 
+
+async function handleDeleteClick(form) {
+  if (!form?.id) return false;
+  if (form.id === 'eventForm') {
+    await deleteCurrentEvent();
+    return true;
+  }
+  const formActionMap = {
+    reminderForm: 'reminders',
+    noteForm: 'notes',
+    shoppingForm: 'shopping',
+    shoppingDetail: 'shopping',
+    familyForm: 'family',
+  };
+  const action = formActionMap[form.id];
+  if (!action) return false;
+  await deleteFromModal(form.id, action);
+  return true;
+}
+
 async function archiveToggleFromModal(formId, action, payloadBuilder) {
   const form = $('#' + formId);
   const id = Number(form?.elements?.id?.value || 0);
@@ -533,12 +553,13 @@ document.addEventListener('click', async e => {
     e.preventDefault();
     e.stopPropagation();
     const form = deleteBtn.closest('form');
-    if (form?.id === 'eventForm') return deleteCurrentEvent();
-    if (form?.id === 'reminderForm') return await deleteFromModal('reminderForm', 'reminders');
-    if (form?.id === 'noteForm') return await deleteFromModal('noteForm', 'notes');
-    if (form?.id === 'shoppingForm') return await deleteFromModal('shoppingForm', 'shopping');
-    if (form?.id === 'shoppingDetail') return await deleteFromModal('shoppingDetail', 'shopping');
-    if (form?.id === 'familyForm') return await deleteFromModal('familyForm', 'family');
+    try {
+      const handled = await handleDeleteClick(form);
+      if (!handled) toast('Eliminazione non disponibile.');
+    } catch (err) {
+      toast(err?.message || 'Errore eliminazione');
+    }
+    return;
   }
 
   const shoppingArchive = e.target.closest('#shoppingDetail .event-edit');
