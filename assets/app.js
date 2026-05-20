@@ -510,6 +510,9 @@ async function deleteFromModal(formId, action) {
 
 
 async function handleDeleteClick(form) {
+  if (!form?.id) {
+    form = document.querySelector('.modal-form:not(.hidden)');
+  }
   if (!form?.id) return false;
   if (form.id === 'eventForm') {
     await deleteCurrentEvent();
@@ -552,7 +555,8 @@ document.addEventListener('click', async e => {
   if (deleteBtn) {
     e.preventDefault();
     e.stopPropagation();
-    const form = deleteBtn.closest('form');
+    let form = deleteBtn.closest('form');
+    if (!form) form = deleteBtn.closest('.modal-form') || document.querySelector('.modal-form:not(.hidden)');
     try {
       const handled = await handleDeleteClick(form);
       if (!handled) toast('Eliminazione non disponibile.');
