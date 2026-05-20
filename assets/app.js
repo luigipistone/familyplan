@@ -177,7 +177,7 @@ function setupModalForms() {
   $$('.modal-form').forEach(form => {
     if (!form.querySelector('.modal-title')) {
       const actions = form.dataset.modalActions
-        ? `<div class="modal-actions">${form.dataset.modalActions === 'crud-noedit' ? '' : `<button class="icon-btn event-edit hidden" type="button" title="Modifica" aria-label="Modifica">${icon('edit')}</button>`}<button class="icon-btn event-save" type="submit" title="Salva" aria-label="Salva">${icon('save')}</button><button class="icon-btn event-delete hidden" type="button" title="Elimina" aria-label="Elimina">${icon('trash')}</button><button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button></div>`
+        ? `<div class="modal-actions">${form.dataset.modalActions === 'crud-noedit' ? '' : `<button class="icon-btn event-edit hidden" type="button" title="Modifica" aria-label="Modifica">${icon('edit')}</button>`}<button class="icon-btn event-save" type="submit" title="Salva" aria-label="Salva">${icon('save')}</button><button class="icon-btn event-delete hidden" type="button" data-delete-form="${form.id}" title="Elimina" aria-label="Elimina">${icon('trash')}</button><button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button></div>`
         : `<button class="icon-btn modal-close" type="button" aria-label="Chiudi">${icon('x')}</button>`;
       form.insertAdjacentHTML('afterbegin', `<div class="modal-title"><h3>${esc(form.dataset.modalTitle || 'Modifica')}</h3>${actions}</div>`);
     }
@@ -557,7 +557,10 @@ document.addEventListener('click', async e => {
   if (deleteBtn) {
     e.preventDefault();
     e.stopPropagation();
-    let form = deleteBtn.closest('form');
+    let form = null;
+    const explicitFormId = deleteBtn.dataset.deleteForm;
+    if (explicitFormId) form = document.getElementById(explicitFormId);
+    if (!form) form = deleteBtn.closest('form');
     if (!form) form = deleteBtn.closest('.modal-form');
     if (!form && currentModalId) form = document.getElementById(currentModalId);
     if (!form) form = document.querySelector('.modal-form:not(.hidden)');
