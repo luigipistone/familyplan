@@ -1,4 +1,5 @@
 const state = { user: null, csrf: window.FP_CSRF, users: [], widgets: [], data: {}, page: 'dashboard' };
+let currentModalId = null;
 
 const pageDefs = {
   dashboard: ['Dashboard', 'home'],
@@ -189,6 +190,7 @@ function openModal(id) {
   if (!modal) return;
   $('#modalBackdrop').classList.add('active');
   modal.classList.remove('hidden');
+  currentModalId = id;
   if (id === 'eventForm' && !modal.elements.id.value) {
     modal.querySelector('.modal-title h3').textContent = modal.dataset.modalTitle || 'Nuovo evento';
     modal.querySelector('.event-delete')?.classList.add('hidden');
@@ -200,6 +202,7 @@ function openModal(id) {
 
 function closeModal(reset = false) {
   $('#modalBackdrop').classList.remove('active');
+  currentModalId = null;
   $$('.modal-form:not(.hidden)').forEach(form => {
     form.classList.add('hidden');
     if (reset && !['profileForm', 'widgetForm', 'settingsForm'].includes(form.id) && typeof form.reset === 'function') form.reset();
@@ -510,9 +513,8 @@ async function deleteFromModal(formId, action) {
 
 
 async function handleDeleteClick(form) {
-  if (!form?.id) {
-    form = document.querySelector('.modal-form:not(.hidden)');
-  }
+  if (!form?.id && currentModalId) form = document.getElementById(currentModalId);
+  if (!form?.id) form = document.querySelector('.modal-form:not(.hidden)');
   if (!form?.id) return false;
   if (form.id === 'eventForm') {
     await deleteCurrentEvent();
@@ -556,7 +558,9 @@ document.addEventListener('click', async e => {
     e.preventDefault();
     e.stopPropagation();
     let form = deleteBtn.closest('form');
-    if (!form) form = deleteBtn.closest('.modal-form') || document.querySelector('.modal-form:not(.hidden)');
+    if (!form) form = deleteBtn.closest('.modal-form');
+    if (!form && currentModalId) form = document.getElementById(currentModalId);
+    if (!form) form = document.querySelector('.modal-form:not(.hidden)');
     try {
       const handled = await handleDeleteClick(form);
       if (!handled) toast('Eliminazione non disponibile.');
