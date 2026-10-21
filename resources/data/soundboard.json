@@ -1,0 +1,226 @@
+[
+    {
+        "id": "ingola",
+        "name": "In Gola",
+        "category": "Reazioni",
+        "file": "/media/soundboard/audio/ingola.mp3",
+        "image": "/soundboard-media/ingola.webp"
+    },
+    {
+        "id": "timanca",
+        "name": "Ti Manca?",
+        "category": "Reazioni",
+        "file": "/media/soundboard/audio/timanca.mp3",
+        "image": "/soundboard-media/timanca.webp"
+    },
+    {
+        "id": "yeehaw",
+        "name": "Yeehaw!",
+        "category": "Personaggi",
+        "file": "/media/soundboard/audio/yeehaw.mp3",
+        "image": "/soundboard-media/yeehaw.webp"
+    },
+    {
+        "id": "loveofmylife",
+        "name": "Love of my life!",
+        "category": "Personaggi",
+        "file": "/media/soundboard/audio/loveofmylife.mp3",
+        "image": "/soundboard-media/loveofmylife.webp"
+    },
+    {
+        "id": "minettizoccola",
+        "name": "Zoccola",
+        "category": "Personaggi",
+        "file": "/media/soundboard/audio/minettizoccola.mp3",
+        "image": "/soundboard-media/minettizoccola.webp"
+    },
+    {
+        "id": "disperation",
+        "name": "Disperacions",
+        "category": "Personaggi",
+        "file": "/media/soundboard/audio/disperation.mp3",
+        "image": "/soundboard-media/disperation.webp"
+    },
+    {
+        "id": "echissenefrega",
+        "name": "Echissenefregaaa",
+        "category": "Reazioni",
+        "file": "/media/soundboard/audio/echissenefrega.mp3",
+        "image": "/soundboard-media/echissenefrega.webp"
+    },
+    {
+        "id": "barboncino",
+        "name": "Barboncino",
+        "category": "Icone",
+        "file": "/media/soundboard/audio/barboncino.mp3",
+        "image": "/soundboard-media/barboncino.webp"
+    },
+    {
+        "id": "labamba",
+        "name": "La Bambaaa!",
+        "category": "Icone",
+        "file": "/media/soundboard/audio/labamba.mp3",
+        "image": "/soundboard-media/labamba.webp"
+    },
+    {
+        "id": "popper-mentale",
+        "name": "Popper Mentale",
+        "category": "Icone",
+        "file": "/media/soundboard/audio/popper-mentale.wav",
+        "image": "/soundboard-media/popper-mentale.webp"
+    },
+    {
+        "id": "esticazzi",
+        "name": "Esticazzi",
+        "category": "Reazioni",
+        "file": "/media/soundboard/audio/esticazzi.mp3",
+        "image": "/soundboard-media/esticazzi.webp"
+    },
+    {
+        "id": "ma-che-cazzo-stai-a-di",
+        "name": "Ma che cazzo stai a dì",
+        "category": "Reazioni",
+        "file": "/media/soundboard/audio/ma-che-cazzo-stai-a-di.mp3",
+        "image": "/soundboard-media/ma-che-cazzo-stai-a-di.webp"
+    },
+    {
+        "id": "smettila",
+        "name": "Smettila",
+        "category": "Reazioni",
+        "file": "/media/soundboard/audio/smettila.wav",
+        "image": "/soundboard-media/smettila.webp"
+    },
+    {
+        "id": "altissimi-ne",
+        "name": "Altissimi ne...",
+        "category": "Icone",
+        "file": "/media/soundboard/audio/altissimi-ne.mp3",
+        "image": "/soundboard-media/altissimi-ne.webp"
+    },
+    {
+        "id": "nonono",
+        "name": "No No No",
+        "category": "Reazioni",
+        "file": "/media/soundboard/audio/nonono.mp3",
+        "image": "/soundboard-media/nonono.webp"
+    },
+    {
+        "id": "toccaate",
+        "name": "Tocca a te!",
+        "category": "Reazioni",
+        "file": "/media/soundboard/audio/toccaate.mp3",
+        "image": "/soundboard-media/toccaate.webp"
+    },
+    {
+        "id": "lurida",
+        "name": "Lurida",
+        "category": "Icone",
+        "file": "/media/soundboard/audio/lurida.mp3",
+        "image": "/soundboard-media/lurida.webp"
+    },
+    {
+        "id": "interessante-ma",
+        "name": "Interessante ma...",
+        "category": "Reazioni",
+        "file": "/media/soundboard/audio/interessante-ma.mp3",
+        "image": "/soundboard-media/interessante-ma.webp"
+    },
+    {
+        "id": "pensieroprofondo",
+        "name": "Pensiero Profondo",
+        "category": "Reazioni",
+        "file": "/media/soundboard/audio/pensieroprofondo.mp3",
+        "image": "/soundboard-media/pensieroprofondo.webp"
+    },
+    {
+        "id": "merda-trash",
+        "name": "Merda Trash",
+        "category": "Reazioni",
+        "file": "/media/soundboard/audio/merda-trash.mp3",
+        "image": "/soundboard-media/merda-trash.webp"
+    },
+    {
+        "id": "realgee-stocazzo",
+        "name": "Sto Cazzo",
+        "category": "Reazioni",
+        "file": "/media/soundboard/audio/realgee-stocazzo.mp3",
+        "image": "/soundboard-media/realgee-stocazzo.webp"
+    },
+    {
+        "id": "battutone-salvini",
+        "name": "Battutone Salvini",
+        "category": "Reazioni",
+        "file": "/media/soundboard/audio/battutone-salvini.mp3",
+        "image": "/soundboard-media/battutone-salvini.webp"
+    },
+    {
+        "id": "berlu-italiaamo",
+        "name": "Italia, Paese che Amo",
+        "category": "Personaggi",
+        "file": "/media/soundboard/audio/berlu-italiaamo.wav",
+        "image": "/soundboard-media/berlu-italiaamo.webp"
+    },
+    {
+        "id": "salvini-tossico",
+        "name": "Salvini Tossico",
+        "category": "Personaggi",
+        "file": "/media/soundboard/audio/salvini-tossico.mp3",
+        "image": "/soundboard-media/salvini-tossico.webp"
+    },
+    {
+        "id": "morgan-pensiero",
+        "name": "Morgan Pensiero",
+        "category": "Personaggi",
+        "file": "/media/soundboard/audio/morgan-pensiero.mp3",
+        "image": "/soundboard-media/morgan-pensiero.webp"
+    },
+    {
+        "id": "oooohshiiiitdiddy",
+        "name": "Ooooh Shiiit Diddy",
+        "category": "Personaggi",
+        "file": "/media/soundboard/audio/oooohshiiiitdiddy.mp3",
+        "image": "/soundboard-media/oooohshiiiitdiddy.webp"
+    },
+    {
+        "id": "trumporgasma",
+        "name": "Trump Orgasma",
+        "category": "Personaggi",
+        "file": "/media/soundboard/audio/trumporgasma.mp3",
+        "image": "/soundboard-media/trumporgasma.webp"
+    },
+    {
+        "id": "naqp-sigla-originale",
+        "name": "Sigla Originale",
+        "category": "Sigle",
+        "file": "/media/soundboard/audio/naqp-sigla-originale.mp3",
+        "image": null
+    },
+    {
+        "id": "naqp-gothic",
+        "name": "Sigla Gothic",
+        "category": "Sigle",
+        "file": "/media/soundboard/audio/naqp-gothic.mp3",
+        "image": null
+    },
+    {
+        "id": "naqp-metalcore",
+        "name": "Sigla Metalcore",
+        "category": "Sigle",
+        "file": "/media/soundboard/audio/naqp-metalcore.mp3",
+        "image": null
+    },
+    {
+        "id": "naqp-neomelodica",
+        "name": "Sigla Neomelodica",
+        "category": "Sigle",
+        "file": "/media/soundboard/audio/naqp-neomelodica.mp3",
+        "image": null
+    },
+    {
+        "id": "naqp-opera",
+        "name": "Sigla Opera",
+        "category": "Sigle",
+        "file": "/media/soundboard/audio/naqp-opera.mp3",
+        "image": null
+    }
+]

@@ -1,43 +1,76 @@
 # FamilyPlan
 
-Webapp mobile-first in PHP, JavaScript/AJAX e MySQL per gestire calendario familiare, liste spesa, profili famiglia/figli, promemoria e note.
+Webapp Laravel mobile-first per calendario familiare, liste spesa, gestione figli, promemoria, note, PWA e gestione utenti admin.
 
-## Funzionalità
+## Installazione su Plesk
 
-- Login con nome e password; creazione utenti riservata all'admin.
-- Telefono come chiave utente per i familiari adulti; profili `figlio` associabili a un genitore anche senza telefono.
-- Ruoli `admin` e `familiare`, categorie familiari, profilo personale, tema light/dark/system.
-- Recupero password via email con token hashato e scadenza; in locale il link viene anche scritto nel file configurato.
-- Dashboard a widget aggiungibili/rimuovibili per Calendario, Lista spesa, Famiglia, Promemoria, Note, Profilo, Impostazioni e Utenti.
-- PWA installabile con manifest, service worker, cache offline base e supporto a notifiche web push lato service worker.
-- Notifiche applicative per creazioni/condivisioni/archiviazioni.
-- Query PDO preparate, password hashate, cookie sessione HttpOnly/SameSite, CSRF token sugli endpoint mutativi.
+1. Carica il progetto nella directory dell'applicazione.
+2. In Plesk imposta la document root su `public`.
+3. Assicurati che Plesk usi PHP 8.3.31 o superiore. Il lockfile Composer è generato per PHP 8.3.31.
+4. Esegui Composer dal pannello Plesk o da SSH:
 
-## Installazione
+   ```bash
+   composer install --no-dev --optimize-autoloader
+   ```
 
-1. Crea/importa il database MySQL `portale_familyplan` usando `database/schema.sql`.
-2. Copia `config.sample.php` in `config.local.php` e inserisci le credenziali reali del database. Il file locale è ignorato da Git.
-   Per aggiornamenti successivi applica sempre i file in `database/migrations/` in ordine cronologico prima di usare la nuova versione.
-3. Pubblica la root del repository: `index.php` è volutamente nella root del progetto e la cartella `public/` non serve più. In sviluppo puoi avviare:
+5. Crea/aggiorna le tabelle del database:
+
+   ```bash
+   php artisan migrate --seed --force
+   ```
+
+6. Ottimizza l'app:
+
+   ```bash
+   php artisan storage:link
+   php artisan config:cache
+   php artisan route:cache
+   ```
+
+7. Verifica che `config.local.php` sia presente sul server e non venga pubblicato su repository.
+8. Configura un SMTP reale in `.env` per il recupero password via email.
+
+## Database e aggiornamenti
+
+Il database non si carica con un file SQL manuale: lo crea Laravel tramite le migrazioni in `database/migrations`.
+
+Primo avvio su Plesk:
 
 ```bash
-php -S localhost:8000 -t .
+php artisan migrate --seed --force
 ```
 
-4. In produzione lascia attivo il file `.htaccess` se usi Apache; con Nginx aggiungi regole equivalenti per negare l'accesso HTTP a `src/`, `database/`, `.git/`, `config.local.php` e ai file di documentazione/configurazione.
+Aggiornamenti futuri:
 
-## Account admin iniziale
+1. Aggiungi una nuova migration per ogni modifica allo schema.
+2. Carica i file aggiornati sul server.
+3. Esegui:
 
-- Nome: `Luigi`
-- Telefono: `3497591581`
-- Password: `#M1l4n1899!`
+   ```bash
+   php artisan migrate --force
+   php artisan config:cache
+   php artisan route:cache
+   ```
 
-Cambia la password dopo il primo accesso in un ambiente reale.
+Laravel registra le migration già eseguite nella tabella `migrations`, quindi a ogni aggiornamento applica solo quelle nuove.
 
-## Note sicurezza produzione
+Prima di ogni aggiornamento importante fai un backup MySQL da Plesk. In produzione non usare mai `php artisan migrate:fresh`: cancella e ricrea tutte le tabelle.
 
-- Usa sempre HTTPS per proteggere sessioni, credenziali e dati sensibili sugli spostamenti familiari.
-- Mantieni `config.local.php` fuori dal repository e limita i permessi del file.
-- Configura SMTP affidabile per il recupero password; `mail()`/log locale è solo un fallback semplice.
-- Per notifiche push complete serve aggiungere una coppia VAPID e salvare le subscription browser; il service worker è già predisposto a mostrare push ricevuti.
-- Se dopo un deploy il browser mostra ancora una versione vecchia, apri una volta `/sw.js` o ricarica la pagina: il service worker ora usa `network-first`, asset versionati e header no-cache per aggiornarsi senza dover usare la navigazione in incognito.
+## Sicurezza
+
+- Registrazione pubblica disabilitata: gli utenti vengono creati solo dall'admin.
+- Login basato su nome e password.
+- Sessioni cifrate, cookie `HttpOnly`, `Secure`, `SameSite=Lax`.
+- Header di sicurezza applicati a ogni risposta web.
+- Credenziali DB e admin in `config.local.php`, escluso da git.
+- Password salvate con hashing Laravel.
+
+## Admin iniziale
+
+L'account admin viene creato dal seeder leggendo `config.local.php`.
+
+## Sviluppo cloud
+
+Leggere [docs/CLOUD.md](docs/CLOUD.md) e [AGENTS.md](AGENTS.md).
+Setup: `bash scripts/cloud-setup.sh`. Test: `vendor/bin/phpunit`.
+Non eseguire il setup cloud nella directory di produzione.
