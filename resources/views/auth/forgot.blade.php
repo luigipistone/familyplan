@@ -1,0 +1,3 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Recupero password</title><link rel="icon" href="/images/app/familyplan-mark.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/images/app/familyplan-mark-192.png"><link rel="stylesheet" href="/css/app.css"></head>
+<body class="auth"><form class="auth-card" method="post" action="{{ route('password.email') }}">@csrf<h1>Recupero</h1><label>Email<input type="email" name="email" required></label><button>Invia link</button><a href="{{ route('login') }}">Torna al login</a></form></body></html>
