@@ -59,7 +59,13 @@ rilascia geometrie e materiali della scena precedente.
 
 Tocco/clic sul prato per muovere Milo. Su desktop, dopo aver dato il focus alla
 scena, frecce o WASD. Pulsanti per voce, pausa, capitoli, informazioni e schermo
-intero quando supportato. I dialoghi e la scheda missione possono scorrere anche
+intero. Il pulsante sopra il gioco e quello nella scena mantengono lo stesso
+iframe: avanzamento e Prova adulto non si azzerano. Nei browser con Fullscreen API
+si usa lo schermo intero nativo; negli altri (in particolare Safari su alcuni
+iPhone) la scena occupa tutto il viewport e nasconde l’interfaccia FamilyPlan.
+Le barre del browser restano sotto il controllo del browser stesso. Il pulsante
+× esce dalla modalità; anche Escape funziona su desktop. Rotazione e altezza
+dinamica del viewport aggiornano la scena senza ricaricarla. I dialoghi e la scheda missione possono scorrere anche
 su schermi bassi; i dialoghi nativi mantengono il focus al loro interno.
 
 I capitoli completati, l’ultimo capitolo selezionato e la preferenza della voce
