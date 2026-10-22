@@ -29,6 +29,7 @@ jobs:
       - run: vendor/bin/phpunit
       - name: Verify Milo chapters
         run: |
+          node --check public/js/milo/worlds.js
           node --check public/js/milo/game.js
           node --test tests/Browser/milo-chapters.test.cjs
       - name: Verify deploy safety

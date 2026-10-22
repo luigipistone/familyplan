@@ -32,6 +32,22 @@ il gioco. Le scelte sono accompagnate da simboli e dalla lettura facoltativa di
 consegne e opzioni; un adulto guida il bambino quando serve. Non sono promessi
 risultati educativi futuri o un apprendimento autonomo a quattro anni.
 
+## Ambientazioni e scoperte
+
+Ogni capitolo ha un luogo 3D distinto: ruscello, villaggio, giardino, frutteto,
+cucina nel bosco, radura piovosa, osservatorio notturno, atelier, sentiero delle
+lucciole, villaggio delle nuvole, gole dei ponti e prato della festa. Cambiano
+terreno, costruzioni, vegetazione, cielo, luce e inquadratura; il ponte compare
+soltanto nelle due missioni che lo richiedono.
+
+Tre oggetti per luogo si possono toccare nella scena o scegliere dal pulsante
+“Esplora”, disponibile anche con tastiera. Le scoperte animano piccoli dettagli;
+quando un oggetto corrisponde alla scelta corrente (ad esempio il secchio blu o
+il rubinetto), attiva lo stesso effetto delle opzioni della missione. Nessuna
+raccolta obbligatoria: le scoperte restano temporanee e non aggiungono salvataggi.
+Le animazioni ambientali rispettano `prefers-reduced-motion`. Il cambio capitolo
+rilascia geometrie e materiali della scena precedente.
+
 ## Comandi e progressi
 
 Tocco/clic sul prato per muovere Milo. Su desktop, dopo aver dato il focus alla
@@ -68,6 +84,7 @@ libero, richiesta a modelli AI, pubblicità o servizio esterno viene usato dal c
 ## File e verifiche
 
 - `public/js/milo/chapters.js`: testi, scelte, riferimenti ai passaggi ed effetti.
+- `public/js/milo/worlds.js`: luoghi procedurali, scoperte e animazioni ambientali.
 - `public/js/milo/game.js`: scena Three.js, effetti, stato, input e ciclo di vita.
 - `public/css/milo.css`: stili interni della scena, separati da quelli FamilyPlan.
 - `public/vendor/three/`: Three.js 0.160.0 self-hosted e relativa licenza MIT.

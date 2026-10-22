@@ -91,129 +91,15 @@
     g.translate(0, 0, -Math.max(0.01, d - 2 * Math.min(r, d * 0.25)) / 2);
     return mesh(g, m, parent);
   }
-  const island = mesh(new THREE.CylinderGeometry(5.45, 5.05, 0.85, 80), soil);
-  island.position.y = -0.36;
-  const turf = mesh(new THREE.CylinderGeometry(5.46, 5.43, 0.18, 80), grass);
-  turf.position.y = 0.16;
-  const riverShape = new THREE.Shape();
-  for (let i = 0; i <= 24; i++) {
-    let x = -0.94 + (1.88 * i) / 24,
-      z = Math.sqrt(5.44 ** 2 - x * x);
-    i ? riverShape.lineTo(x, z) : riverShape.moveTo(x, z);
-  }
-  for (let i = 24; i >= 0; i--) {
-    let x = -0.94 + (1.88 * i) / 24;
-    riverShape.lineTo(x, -Math.sqrt(5.44 ** 2 - x * x));
-  }
-  riverShape.closePath();
-  const river = mesh(new THREE.ShapeGeometry(riverShape), water);
-  river.rotation.x = -Math.PI / 2;
-  river.position.y = 0.263;
-  river.receiveShadow = true;
-  const waves = [];
-  for (let j = 0; j < 16; j++) {
-    let pts = [];
-    for (let i = 0; i <= 14; i++)
-      pts.push(
-        new THREE.Vector3(
-          -0.62 + i * 0.085,
-          0.276,
-          -4.7 + j * 0.61 + Math.sin(i * 0.5 + j) * 0.04,
-        ),
-      );
-    let line = new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(pts),
-      new THREE.LineBasicMaterial({
-        color: "#d8efdc",
-        transparent: true,
-        opacity: 0.45,
-      }),
-    );
-    scene.add(line);
-    waves.push(line);
-  }
-  function tree(x, z, s = 1) {
-    const g = new THREE.Group();
-    g.position.set(x, 0.25, z);
-    g.scale.setScalar(s);
-    scene.add(g);
-    let stem = mesh(new THREE.CylinderGeometry(0.1, 0.15, 1.15, 9), trunk, g);
-    stem.position.y = 0.55;
-    sphere(0.66, leaf, 0, 1.55, 0, g, [0.85, 1.05, 0.9]);
-    sphere(0.52, darkleaf, 0.32, 1.2, 0.1, g);
-    sphere(0.46, leaf, -0.3, 1.2, 0.15, g);
-    return g;
-  }
-  [
-    [-3.4, -2.3, 1.15],
-    [-4.25, -0.65, 0.85],
-    [-2.1, -3.7, 0.88],
-    [2.1, -3.55, 1.2],
-    [3.8, -2.25, 0.9],
-    [4.4, 0.5, 0.7],
-    [3.65, 2.3, 0.7],
-    [-3.6, 2.65, 0.55],
-  ].forEach((v) => tree(...v));
   let seed = 28;
   const rand = () => {
     seed = (seed * 1664525 + 1013904223) >>> 0;
     return seed / 4294967296;
   };
-  for (let i = 0; i < 48; i++) {
-    let a = rand() * Math.PI * 2,
-      r = 2 + rand() * 3,
-      x = Math.cos(a) * r,
-      z = Math.sin(a) * r;
-    if (
-      Math.abs(x) < 1.15 ||
-      Math.hypot(x + 2, z) < 1.15 ||
-      Math.hypot(x - 2.5, z) < 1.2
-    )
-      continue;
-    let stem = mesh(
-      new THREE.CylinderGeometry(0.012, 0.014, 0.16, 5),
-      darkleaf,
-    );
-    stem.position.set(x, 0.33, z);
-    sphere(0.06, i % 3 ? cream : yellow, x, 0.44, z, scene, [1, 0.65, 1]);
-  }
-  for (let side of [-1, 1])
-    for (let j = 0; j < 10; j++) {
-      let z = -4.3 + j * 0.94;
-      if (Math.abs(z) < 1) continue;
-      let rock = sphere(
-        0.16,
-        mat(j % 2 ? "#dce0c0" : "#c6cbaa"),
-        side * (1.06 + rand() * 0.12),
-        0.29,
-        z,
-        scene,
-        [1.3, 0.7, 1],
-      );
-      rock.rotation.y = rand() * 3;
-    }
-  const stepping = mat("#c7d7ad");
-  for (let i = 0; i < 5; i++) {
-    let o = mesh(new THREE.CylinderGeometry(0.2, 0.23, 0.045, 9), stepping);
-    o.position.set(-2.3 + i * 0.27, 0.272, 1.4 - i * 0.28);
-  }
-  const patch = box(1.25, 0.05, 1.05, mat("#ad9876"), 2.75, 0.28, -0.05);
-  const carrotLeaves = [];
-  const carrots = [];
-  for (let i = 0; i < 5; i++) {
-    let x = 2.4 + (i % 3) * 0.32,
-      z = -0.33 + Math.floor(i / 3) * 0.45;
-    let c = mesh(new THREE.ConeGeometry(0.095, 0.3, 9), mat("#ecaa61"));
-    c.position.set(x, 0.42, z);
-    c.rotation.z = Math.PI * 0.12;
-    carrots.push(c);
-    for (let k = 0; k < 3; k++) {
-      let l = mesh(new THREE.ConeGeometry(0.035, 0.23, 5), darkleaf);
-      l.position.set(x + (k - 1) * 0.045, 0.64, z);
-      l.rotation.z = (k - 1) * 0.35;
-      carrotLeaves.push(l);
-    }
-  }
+  let world = null;
+  const reducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
   function robot() {
     let g = new THREE.Group();
     scene.add(g);
@@ -309,6 +195,7 @@
   marker.position.y = 0.28;
   marker.visible = false;
   let target = null;
+  let route = [];
   let width = 0.43,
     wantedWidth = 0.43,
     build = 0,
@@ -328,23 +215,6 @@
       speed: 1 + rand() * 2,
       y: rand() * 1.5,
     });
-  }
-  const clouds = [];
-  for (let j = 0; j < 5; j++) {
-    let g = new THREE.Group();
-    g.position.set((j - 2) * 5, 5 + (j % 2) * 1.4, -8 - rand() * 5);
-    scene.add(g);
-    for (let i = 0; i < 4; i++)
-      sphere(
-        0.55,
-        mat("#eff3e6"),
-        i * 0.55,
-        Math.sin(i) * 0.15,
-        0,
-        g,
-        [1.3, 0.7, 0.8],
-      );
-    clouds.push(g);
   }
   const $ = (id) => document.getElementById(id);
   const chapters = window.MiloChapters;
@@ -477,6 +347,7 @@
     visualMode = "idle";
     won = true;
     target = null;
+    route = [];
     marker.visible = false;
     if (!progress.completed.includes(chapter().id))
       progress.completed.push(chapter().id);
@@ -598,9 +469,6 @@
     root.position.set(2.5, 0.3, -0.25);
     chapterObjects.root = root;
     const isBridge = kind === "bridge" || kind === "bridge-two";
-    patch.visible = isBridge;
-    carrots.forEach((o) => (o.visible = isBridge));
-    carrotLeaves.forEach((o) => (o.visible = isBridge));
     pip.g.position.set(-2.1, 0.26, -0.12);
     if (kind === "house" || kind === "privacy") {
       const house = group(root);
@@ -706,7 +574,7 @@
       cap.scale.y = 0.48;
     }
     if (kind === "box") {
-      box(1, 0.65, 0.8, wood, 0, 0.325, 0, root);
+      chapterObjects.box = box(1, 0.65, 0.8, wood, 0, 0.325, 0, root);
       const lid = group(root);
       lid.position.set(0, 0.68, -0.4);
       box(1.08, 0.09, 0.88, material("#c89561"), 0, 0, 0.4, lid);
@@ -804,6 +672,20 @@
         );
         line.position.set((i - 1) * 0.4, 0.5 + i * 0.15, 0);
       }
+    }
+    const interactions = {
+      house: ["house-large"],
+      pink: ["point-pink"],
+      flower: ["water-flower"],
+      box: ["box-open", "show-star"],
+      ball: ["ball-show", "ball-correct"],
+      comparison: ["ball-compare"],
+      table: ["party-setup", "party-two"],
+      sign: ["sign-question", "sign-reveal", "sign-private", "sign-fantasy"],
+    };
+    for (const [key, candidates] of Object.entries(interactions)) {
+      if (chapterObjects[key]?.isObject3D)
+        chapterObjects[key].userData.miloEffects = candidates;
     }
   }
   function replaceSign(text, width = 1.4) {
@@ -937,6 +819,8 @@
     if (!Number.isInteger(index) || index < 0 || index >= chapters.length)
       return;
     epoch++;
+    clearTimeout(toastTimer);
+    $("toast").classList.remove("on");
     pending = null;
     stopVoice();
     chapterIndex = index;
@@ -947,6 +831,7 @@
     visualTime = 0;
     won = false;
     target = null;
+    route = [];
     marker.visible = false;
     milo.g.position.set(-2.65, 0.26, 1.7);
     milo.g.rotation.y = 0;
@@ -957,7 +842,16 @@
       chapter().scene === "bridge" || chapter().scene === "bridge-two";
     width = wantedWidth = isBridge ? 0.43 : 1.55;
     build = chapter().scene === "bridge" ? 0 : 1;
-    bridge.visible = chapter().scene !== "bridge";
+    world?.dispose();
+    world = window.MiloWorlds.create(THREE, chapter().id);
+    scene.add(world.root);
+    scene.background.set(world.spec.sky);
+    scene.fog.color.set(world.spec.sky);
+    sun.intensity = world.spec.night ? 1.3 : 3.2;
+    document.body.dataset.environment = chapter().id;
+    document.body.dataset.lighting = world.spec.night ? "night" : "day";
+    $("locationName").textContent = world.spec.name;
+    bridge.visible = !!world.spec.river && chapter().scene !== "bridge";
     planks.forEach((p) => (p.material = wood));
     createProps(chapter().scene);
     progress.lastChapter = chapter().id;
@@ -968,13 +862,15 @@
     $("chapterSkill").textContent = chapter().skill;
     $("parentNote").textContent = chapter().parent;
     renderStep();
+    resize();
   }
   function isPaused() {
     return (
       manualPaused ||
       document.hidden ||
       $("parent").open ||
-      $("chaptersDialog").open
+      $("chaptersDialog").open ||
+      $("exploreDialog").open
     );
   }
   function syncPause() {
@@ -1010,7 +906,7 @@
         icon.textContent = c.icon;
         icon.setAttribute("aria-hidden", "true");
         const title = document.createElement("strong");
-        title.textContent = `${index + 1}. ${c.title}`;
+        title.textContent = `${index + 1}. ${c.title} · ${window.MiloWorlds.definitions[c.id].name}`;
         const status = document.createElement("small");
         status.textContent = progress.completed.includes(c.id)
           ? testMode
@@ -1029,6 +925,38 @@
     $("chaptersDialog").showModal();
     syncPause();
   }
+  function discover(id) {
+    const info = world.interact(id);
+    if (!info) return;
+    document.body.dataset.lastDiscovery = id;
+    const option =
+      phase === "playing" && !pending
+        ? chapter().steps[stepIndex].choices.find((c) =>
+            info[4]?.includes(c.effect),
+          )
+        : null;
+    if (option) choose(option);
+    else toast(info[3]);
+  }
+  listen($("exploreButton"), "click", () => {
+    $("exploreTitle").textContent = world.spec.name;
+    $("discoveryList").replaceChildren(
+      ...world.spec.discoveries.map((info) => {
+        const button = document.createElement("button");
+        button.className = "action";
+        button.dataset.discovery = info[0];
+        button.textContent = info[1] + " " + info[2];
+        button.onclick = () => {
+          $("exploreDialog").close();
+          discover(info[0]);
+        };
+        return button;
+      }),
+    );
+    $("exploreDialog").showModal();
+    syncPause();
+  });
+  listen($("closeExplore"), "click", () => $("exploreDialog").close());
   listen($("chaptersButton"), "click", openChapters);
   listen($("closeChapters"), "click", () => $("chaptersDialog").close());
   listen($("info"), "click", () => {
@@ -1037,7 +965,7 @@
   });
   listen($("closeInfo"), "click", () => $("parent").close());
   listen($("closeInfoBottom"), "click", () => $("parent").close());
-  for (const dialog of [$("parent"), $("chaptersDialog")])
+  for (const dialog of [$("parent"), $("chaptersDialog"), $("exploreDialog")])
     listen(dialog, "close", syncPause);
   listen($("pause"), "click", () => {
     manualPaused = !manualPaused;
@@ -1083,9 +1011,25 @@
       p.x *= 4.9 / radius;
       p.z *= 4.9 / radius;
     }
-    if (p.x > -0.98) p.x = -1.25;
+    route = [];
+    if (world.spec.river) {
+      // Cross the stream only on the bridge, once it is wide enough.
+      const otherBank = Math.sign(p.x) !== Math.sign(milo.g.position.x);
+      if (otherBank && (width < 1.2 || build < 0.95)) p.x = -1.25;
+      else if (otherBank) {
+        const side = Math.sign(milo.g.position.x) || -1;
+        route.push(
+          new THREE.Vector3(side * 1.3, 0.26, 0),
+          new THREE.Vector3(-side * 1.3, 0.26, 0),
+        );
+      } else if (Math.abs(p.x) < 1.1 && Math.abs(p.z) > width / 2)
+        p.x = Math.sign(milo.g.position.x) * 1.25;
+    }
     p.y = 0.26;
-    target = p;
+    if (route.length) {
+      route.push(p.clone());
+      target = route.shift();
+    } else target = p;
     marker.position.set(p.x, 0.279, p.z);
     marker.visible = true;
   }
@@ -1097,6 +1041,33 @@
       (-e.clientY / innerHeight) * 2 + 1,
     );
     ray.setFromCamera(mouse, camera);
+    const hit = ray
+      .intersectObjects([...world.targets, props], true)
+      .find((hit) => {
+        let node = hit.object;
+        while (node) {
+          if (!node.visible) return false;
+          node = node.parent;
+        }
+        return true;
+      });
+    if (hit) {
+      let node = hit.object;
+      while (node && !node.userData.worldAction && !node.userData.miloEffects)
+        node = node.parent;
+      if (node?.userData.miloEffects) {
+        const option = chapter().steps[stepIndex].choices.find((c) =>
+          node.userData.miloEffects.includes(c.effect),
+        );
+        if (option && phase === "playing" && !pending) choose(option);
+        else toast("Guarda la missione: scegliamo insieme il prossimo passo.");
+        return;
+      }
+      if (node) {
+        discover(node.userData.worldAction);
+        return;
+      }
+    }
     const p = new THREE.Vector3();
     if (ray.ray.intersectPlane(plane, p)) moveTo(p);
   });
@@ -1123,7 +1094,7 @@
   function resize() {
     const a = innerWidth / innerHeight;
     renderer.setSize(innerWidth, innerHeight, false);
-    const span = a < 0.85 ? 10.6 / a : 12.8;
+    const span = a < 0.85 ? 12 / a : 12.8;
     const short = innerHeight < 570 && a > 1.4;
     const shift = short ? span * a * 0.18 : 0;
     camera.left = (-span * a) / 2 + shift;
@@ -1131,7 +1102,9 @@
     camera.top = span / 2;
     camera.bottom = -span / 2;
     look.set(0, 0, a < 0.85 ? 1.4 : 1.5);
-    camera.position.copy(look).add(new THREE.Vector3(10, 12, 15));
+    camera.position
+      .copy(look)
+      .add(new THREE.Vector3(...(world?.spec.camera || [10, 12, 15])));
     camera.lookAt(look);
     camera.updateProjectionMatrix();
     renderer.render(scene, camera);
@@ -1167,8 +1140,8 @@
         );
         milo.g.rotation.y += diff * Math.min(1, dt * 9);
       } else {
-        target = null;
-        marker.visible = false;
+        target = route.shift() || null;
+        marker.visible = !!target;
       }
     }
     milo.head.position.y = 1.28 + Math.sin(total * 2.6) * 0.025;
@@ -1267,10 +1240,7 @@
       }
     }
 
-    for (let j = 0; j < waves.length; j++)
-      waves[j].position.z = Math.sin(total * 0.7 + j) * 0.08;
-    for (let j = 0; j < clouds.length; j++)
-      clouds[j].position.x += Math.sin(total * 0.2 + j) * dt * 0.035;
+    world.update(dt, reducedMotion);
     marker.scale.setScalar(1 + Math.sin(total * 4) * 0.1);
     if (won) {
       for (let i = 0; i < sparkles.length; i++) {

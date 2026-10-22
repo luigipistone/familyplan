@@ -536,3 +536,73 @@ canvas:focus-visible {
   height: 17px;
   fill: currentColor;
 }
+
+/* Location controls stay separate from the mission on small screens. */
+.world-tools {
+  position: absolute;
+  top: 116px;
+  left: 28px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: calc(100% - 56px);
+}
+.world-tools .chapter-picker {
+  position: static;
+  margin: 0;
+}
+.location-name {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: #456358;
+  font-weight: 600;
+}
+.hint {
+  top: 194px;
+}
+.discovery-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+body[data-lighting="night"] .brand,
+body[data-lighting="night"] .location-name,
+body[data-lighting="night"] .hint {
+  color: #fff4de;
+}
+@media (max-width: 600px) {
+  .world-tools {
+    top: 106px;
+    left: 18px;
+    max-width: calc(100% - 36px);
+  }
+  .hint {
+    top: 181px;
+  }
+}
+@media (max-height: 570px) and (min-aspect-ratio: 14/10) {
+  .world-tools {
+    top: 96px;
+    left: 20px;
+    max-width: 48%;
+  }
+  .hint {
+    display: none;
+  }
+}
+
+body[data-lighting="night"] .chapter,
+body[data-lighting="night"] .eyebrow {
+  color: #d5e6dc;
+}
+@media (max-width: 600px) {
+  .toast {
+    top: 224px;
+    width: calc(100% - 40px);
+    text-align: center;
+  }
+  .hint {
+    display: none;
+  }
+}
