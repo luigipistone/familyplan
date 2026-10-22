@@ -47,6 +47,19 @@ dal suo primo passaggio; il completamento viene salvato solo alla fine.
 La rimozione dei dati del sito elimina questi progressi. Se lo storage non è
 disponibile, il gioco resta utilizzabile e lo segnala.
 
+## Prova adulto
+
+Il collegamento sopra il gioco apre `/giochi/milo?prova=1`. Il parametro viene
+propagato alla scena autenticata. In questa modalità il gioco non legge né scrive
+localStorage: completamenti, ultimo capitolo e voce restano soltanto in memoria.
+Tutti i capitoli si possono scegliere dal sentiero; quelli provati hanno una
+marcatura temporanea. Ricaricando o riaprendo la prova si riparte da zero.
+
+Il comando “Esci dalla prova” torna alla modalità normale, che rilegge i suoi
+progressi precedenti. Entrata e uscita usano la navigazione AJAX di FamilyPlan.
+È una modalità di esplorazione senza salvataggi, non un controllo parentale o
+un ruolo diverso: entrambi i percorsi richiedono sempre l’autenticazione.
+
 La voce usa SpeechSynthesis del browser e si può disattivare. Disponibilità,
 pronuncia e implementazione locale/remota dipendono dal dispositivo; il testo
 letto è esclusivamente quello predisposto nel gioco. Nessun microfono, input

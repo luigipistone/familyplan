@@ -352,24 +352,29 @@
   const listen = (node, type, callback) =>
     node.addEventListener(type, callback, { signal: events.signal });
   const progressKey = document.body.dataset.progressKey;
+  const testMode = document.body.dataset.testMode === "true";
   let progress = { completed: [], lastChapter: chapters[0].id, voice: false };
   let storageAvailable = true;
-  try {
-    const saved = JSON.parse(localStorage.getItem(progressKey) || "{}");
-    if (saved && typeof saved === "object") {
-      progress.completed = Array.isArray(saved.completed)
-        ? [
-            ...new Set(
-              saved.completed.filter((id) => chapters.some((c) => c.id === id)),
-            ),
-          ]
-        : [];
-      if (chapters.some((c) => c.id === saved.lastChapter))
-        progress.lastChapter = saved.lastChapter;
-      progress.voice = saved.voice === true;
+  if (!testMode) {
+    try {
+      const saved = JSON.parse(localStorage.getItem(progressKey) || "{}");
+      if (saved && typeof saved === "object") {
+        progress.completed = Array.isArray(saved.completed)
+          ? [
+              ...new Set(
+                saved.completed.filter((id) =>
+                  chapters.some((c) => c.id === id),
+                ),
+              ),
+            ]
+          : [];
+        if (chapters.some((c) => c.id === saved.lastChapter))
+          progress.lastChapter = saved.lastChapter;
+        progress.voice = saved.voice === true;
+      }
+    } catch {
+      storageAvailable = false;
     }
-  } catch {
-    storageAvailable = false;
   }
   let chapterIndex = Math.max(
     0,
@@ -393,6 +398,13 @@
   const bridgeBlue = mat("#7caeb5");
   const chapter = () => chapters[chapterIndex];
   function saveProgress() {
+    if (testMode) {
+      $("chapterCount").textContent =
+        `· prova ${progress.completed.length}/${chapters.length}`;
+      $("saveStatus").textContent =
+        "Prova adulto: tutto resta temporaneo. I progressi normali non vengono letti o modificati.";
+      return;
+    }
     try {
       localStorage.setItem(progressKey, JSON.stringify(progress));
       storageAvailable = true;
@@ -483,7 +495,9 @@
       ],
       2,
     );
-    $("speaker").textContent = "Per oggi può bastare · insieme a un adulto";
+    $("speaker").textContent = testMode
+      ? "Prova adulto · niente salvato"
+      : "Per oggi può bastare · insieme a un adulto";
   }
   function choose(choice) {
     if (phase !== "playing" || manualPaused) return;
@@ -999,7 +1013,9 @@
         title.textContent = `${index + 1}. ${c.title}`;
         const status = document.createElement("small");
         status.textContent = progress.completed.includes(c.id)
-          ? "✓ Già esplorato"
+          ? testMode
+            ? "✓ Provato · non salvato"
+            : "✓ Già esplorato"
           : c.skill;
         button.append(icon, title, status);
         button.onclick = () => {

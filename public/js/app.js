@@ -38,7 +38,7 @@ document.addEventListener('pointerdown', event => {
 }, { capture: true, passive: true });
 
 document.addEventListener('click', event => {
-  const anchor = event.target.closest('.bottom-nav a, .brand, .top-menu-link, .top-actions a');
+  const anchor = event.target.closest('.bottom-nav a, .brand, .top-menu-link, .top-actions a, .milo-mode-link');
   if (!anchor || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   if (anchor.target && anchor.target !== '_self') return;
   const url = new URL(anchor.href, window.location.href);
