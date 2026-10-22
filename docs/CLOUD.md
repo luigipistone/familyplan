@@ -22,6 +22,11 @@ preferiti, suggerimenti, carosello per genere e provider italiani. La selezione
 genere e' conservata in sessionStorage. I modali bloccano lo scroll del body.
 I suggerimenti sono euristiche attuali, da perfezionare con test mirati.
 
+L’isola di Milo: nuova sezione autenticata `/giochi/milo`, con 12 capitoli 3D
+educativi e attività da fare con un adulto. Scena same-origin isolata dagli stili
+dell’app, Three.js self-hosted e progressi locali per utente/browser. Nessuna
+migration, input libero o chiamata a un modello AI. Vedere [MILO.md](MILO.md).
+
 ## Ambiente Codex Cloud
 
 1. Collegare luigipistone/familyplan nell'ambiente Codex Cloud.
