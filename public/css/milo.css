@@ -606,3 +606,7 @@ body[data-lighting="night"] .eyebrow {
     display: none;
   }
 }
+
+/* Keep controls clear of notches when the iframe occupies the viewport. */
+.hud {left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));}
+@media(max-height:570px) and (min-aspect-ratio:14/10){.hud{top:max(16px,env(safe-area-inset-top));}.card{right:max(20px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));}}

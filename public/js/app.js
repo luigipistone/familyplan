@@ -47,6 +47,48 @@ document.addEventListener('click', event => {
   navigatePage(url.href);
 }, true);
 
+// Keep the same iframe alive when entering immersive mode (including iPhone).
+let miloImmersiveScroll = 0;
+function setMiloImmersive(active) {
+  const wasActive = root.classList.contains('milo-immersive');
+  if (!active && !wasActive) return;
+  if (active && !wasActive) miloImmersiveScroll = window.scrollY;
+  root.classList.toggle('milo-immersive', active);
+  const header = document.querySelector('body > header');
+  if (header) header.inert = active;
+  document.querySelector('[data-milo-fullscreen]')?.setAttribute('aria-pressed', String(active));
+  const frame = document.querySelector('.milo-frame');
+  frame?.contentWindow?.dispatchEvent(new Event('milo:fullscreenchange'));
+  if (!active && wasActive) window.scrollTo(0, miloImmersiveScroll);
+}
+function exitMiloImmersive() {
+  setMiloImmersive(false);
+  if (document.fullscreenElement?.matches('.milo-page')) document.exitFullscreen().catch(() => {});
+}
+function toggleMiloImmersive() {
+  const page = document.querySelector('.milo-page');
+  if (!page) return;
+  if (root.classList.contains('milo-immersive')) { exitMiloImmersive(); return; }
+  setMiloImmersive(true);
+  // Request synchronously during the gesture. Rejection leaves the viewport fallback active.
+  if (document.fullscreenEnabled && page.requestFullscreen) {
+    try { page.requestFullscreen().catch(() => {}); } catch {}
+  }
+}
+window.addEventListener('milo:toggle-fullscreen', event => {
+  if (event.detail?.source === document.querySelector('.milo-frame')?.contentWindow) toggleMiloImmersive();
+});
+document.addEventListener('click', event => {
+  if (event.target.closest('[data-milo-fullscreen]')) toggleMiloImmersive();
+});
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) exitMiloImmersive();
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && root.classList.contains('milo-immersive')) exitMiloImmersive();
+});
+window.addEventListener('pagehide', exitMiloImmersive);
+
 window.addEventListener('popstate', () => navigatePage(window.location.href, { push: false }));
 
 function pushNotificationsEnabled() {
@@ -526,6 +568,7 @@ async function replacePageFromResponse(response, navigationUrl = null) {
   stopSoundboardAudio();
   window.unmountVueApps?.(currentMain);
   syncPersistentChrome(nextDocument);
+  exitMiloImmersive();
   currentMain.replaceChildren(...Array.from(nextMain.childNodes));
   window.mountVueApps?.();
   hydrateDynamicState(navigationUrl ? new URL(navigationUrl, window.location.origin).search : window.location.search);

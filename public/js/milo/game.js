@@ -1005,15 +1005,58 @@
     "aria-label",
     progress.voice ? "Disattiva voce" : "Attiva voce",
   );
-  listen($("fullscreen"), "click", async () => {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else if (document.documentElement.requestFullscreen)
-        await document.documentElement.requestFullscreen();
-      else toast("Puoi ruotare il dispositivo per avere più spazio.");
-    } catch {
-      toast("Lo schermo intero non è disponibile in questo browser.");
+  function embeddedFullscreen() {
+    return (
+      window.parent !== window && !!window.frameElement?.matches(".milo-frame")
+    );
+  }
+  function toggleFullscreen() {
+    if (embeddedFullscreen()) {
+      window.parent.dispatchEvent(
+        new CustomEvent("milo:toggle-fullscreen", {
+          detail: { source: window },
+        }),
+      );
+      return;
     }
+    const request = document.fullscreenElement
+      ? document.exitFullscreen()
+      : document.documentElement.requestFullscreen?.();
+    request?.catch(() =>
+      toast("Lo schermo intero non è disponibile in questo browser."),
+    );
+  }
+  function syncFullscreen() {
+    const active = embeddedFullscreen()
+      ? window.parent.document.documentElement.classList.contains(
+          "milo-immersive",
+        )
+      : !!document.fullscreenElement;
+    const button = $("fullscreen");
+    button.setAttribute("aria-pressed", String(active));
+    button.setAttribute(
+      "aria-label",
+      active ? "Esci dallo schermo intero" : "Schermo intero",
+    );
+    button.title = active ? "Esci dallo schermo intero" : "Schermo intero";
+    button.textContent = active ? "×" : "⛶";
+    resize();
+  }
+  listen($("fullscreen"), "click", toggleFullscreen);
+  listen(window, "milo:fullscreenchange", syncFullscreen);
+  listen(document, "fullscreenchange", syncFullscreen);
+  listen(window, "keydown", (event) => {
+    if (
+      event.key === "Escape" &&
+      embeddedFullscreen() &&
+      window.parent.document.documentElement.classList.contains(
+        "milo-immersive",
+      ) &&
+      ![$("parent"), $("chaptersDialog"), $("exploreDialog")].some(
+        (dialog) => dialog.open,
+      )
+    )
+      toggleFullscreen();
   });
   const ray = new THREE.Raycaster(),
     mouse = new THREE.Vector2(),
@@ -1279,7 +1322,7 @@
     frameId = requestAnimationFrame(frame);
   }
   startChapter(chapterIndex);
-  resize();
+  syncFullscreen();
   syncPause();
   listen(window, "pageshow", (event) => {
     if (event.persisted) syncPause();

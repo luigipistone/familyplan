@@ -1041,7 +1041,7 @@ html.tools-menu-open { overflow: hidden; }
 }
 
 .milo-mode-bar { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 40px; margin-bottom: .6rem; font-size: .8rem; color: var(--muted); }
-.milo-mode-link { flex-shrink: 0; padding: .55rem .85rem; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--brand-strong); font-weight: 700; }
+.milo-mode-link, .milo-fullscreen-button { flex-shrink: 0; padding: .55rem .85rem; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--brand-strong); font-weight: 700; }
 .milo-frame {
   display: block;
   width: 100%;
@@ -2992,3 +2992,11 @@ form.panel > * + * {
     font-size: .58rem;
   }
 }
+
+.milo-mode-actions {display:flex;gap:.4rem;align-items:center;flex-shrink:0;}
+.milo-mode-actions button {font:inherit;cursor:pointer;}
+html.milo-immersive, html.milo-immersive body {overflow:hidden;overscroll-behavior:none;}
+html.milo-immersive .milo-page {position:fixed;inset:0;z-index:2000;width:100%;height:100vh;height:100dvh;margin:0;padding:0;background:#dfece7;}
+html.milo-immersive .milo-mode-bar, html.milo-immersive .milo-page-note {display:none;}
+html.milo-immersive .milo-frame {width:100%;height:100%;max-height:none;border:0;border-radius:0;}
+@media(max-width:600px){.milo-mode-bar{flex-wrap:wrap;}.milo-mode-actions{margin-left:auto;}}
