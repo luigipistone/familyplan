@@ -44,6 +44,19 @@ class MiloGameTest extends TestCase
             ->assertDontSee('familyplan.milo.v1.user-'.$first->id.'"', false);
     }
 
+    public function test_adult_preview_is_explicit_and_propagates_to_the_authenticated_scene(): void
+    {
+        $this->actingAs($this->user())->get(route('milo', ['prova' => 1]))
+            ->assertOk()
+            ->assertSee(route('milo.scene', ['prova' => 1]))
+            ->assertSee('Prova adulto · nessun salvataggio')
+            ->assertSee('Esci dalla prova');
+        $this->get(route('milo.scene', ['prova' => 1]))->assertOk()
+            ->assertSee('data-test-mode="true"', false);
+        $this->get(route('milo.scene'))->assertOk()
+            ->assertSee('data-test-mode="false"', false);
+    }
+
     private function user(): User
     {
         return User::create([

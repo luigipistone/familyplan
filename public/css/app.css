@@ -1040,20 +1040,22 @@ html.tools-menu-open { overflow: hidden; }
   padding: 1rem 1rem max(1.5rem, env(safe-area-inset-bottom));
 }
 
+.milo-mode-bar { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 40px; margin-bottom: .6rem; font-size: .8rem; color: var(--muted); }
+.milo-mode-link { flex-shrink: 0; padding: .55rem .85rem; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--brand-strong); font-weight: 700; }
 .milo-frame {
   display: block;
   width: 100%;
-  height: max(570px, min(850px, calc(100dvh - 112px)));
+  height: max(570px, min(850px, calc(100dvh - 164px)));
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: #dfece7;
 }
 .milo-page-note { margin: .6rem .2rem 0; font-size: .76rem; color: var(--muted); }
 @media (max-width: 700px) {
-  .milo-frame { height: max(480px, calc(100dvh - 104px)); border-radius: var(--radius-sm); }
+  .milo-frame { height: max(480px, calc(100dvh - 156px)); border-radius: var(--radius-sm); }
 }
 @media (orientation: landscape) and (max-height: 560px) {
-  .milo-frame { height: max(280px, calc(100dvh - 100px)); }
+  .milo-frame { height: max(280px, calc(100dvh - 152px)); }
 }
 
 .hero, .page-head {
