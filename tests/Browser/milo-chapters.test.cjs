@@ -25,7 +25,10 @@ test('every chapter has a reachable ending and all choices lead to a valid step 
       if (reached.has(index)) return false;
       reached.add(index);
       const step = chapter.steps[index];
-      assert.ok(step.title && step.text && step.choices.length);
+      assert.ok(step.title && step.text);
+      assert.equal(step.choices.length, 2, chapter.id + ': offer two manageable choices');
+      assert.equal(step.choices.filter(c => c.to !== undefined).length, 1, chapter.id + ': choices must have different consequences');
+      assert.equal(new Set(step.choices.map(c => c.label)).size, 2);
       let ends = false;
       for (const choice of step.choices) {
         assert.ok(choice.label && choice.icon);

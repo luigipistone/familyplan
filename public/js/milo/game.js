@@ -251,6 +251,7 @@
     chapters.findIndex((c) => c.id === progress.lastChapter),
   );
   let stepIndex = 0;
+  let choiceOrders = [];
   let frameId = null;
   let manualPaused = false;
   let destroyed = false;
@@ -321,6 +322,8 @@
         button.className = "action" + (choice.secondary ? " secondary" : "");
         button.textContent = `${choice.icon || ""}  ${choice.label}`;
         if (choice.effect) button.dataset.effect = choice.effect;
+        button.dataset.choice =
+          chapter().steps[stepIndex].choices.indexOf(choice);
         button.onclick = () => {
           stopVoice();
           if (choice.run) choice.run();
@@ -338,8 +341,12 @@
   }
   function renderStep(feedback) {
     const step = chapter().steps[stepIndex];
+    // Keep positions stable on retries, but do not teach "always tap the first".
+    const choices = (choiceOrders[stepIndex] ||=
+      Math.random() < 0.5 ? [...step.choices] : [...step.choices].reverse());
     phase = "playing";
-    say(step.title, feedback || step.text, step.choices, stepIndex);
+    document.body.dataset.stepIndex = stepIndex;
+    say(step.title, feedback || step.text, choices, stepIndex);
   }
   function completeChapter() {
     phase = "completed";
@@ -742,7 +749,12 @@
       tween(chapterObjects.pink, "scale", 1.1);
       return 0.4;
     },
-    "apples-one": () => 0.2,
+    "apples-one": () => {
+      chapterObjects.apples.forEach((a, i) => {
+        a.visible = i === 0;
+      });
+      return 0.3;
+    },
     "apples-three": () => {
       chapterObjects.apples.forEach((a, i) => {
         a.visible = true;
@@ -825,6 +837,7 @@
     stopVoice();
     chapterIndex = index;
     stepIndex = 0;
+    choiceOrders = [];
     phase = "playing";
     phaseTime = 0;
     visualMode = "idle";

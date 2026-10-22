@@ -1,4 +1,4 @@
-/* Prepared, age-appropriate stories: no model requests or child text input. */
+/* Prepared stories: two meaningful choices at every step, with gentle retries. */
 window.MiloChapters = [
   {
     id: "ponte",
@@ -12,45 +12,57 @@ window.MiloChapters = [
       "Una richiesta si può migliorare dopo aver osservato il risultato. Il primo ponte non è un errore della bambina: manca soltanto un dettaglio.",
     steps: [
       {
-        title: "Una carota dall’altra parte.",
-        text: "Pip vorrebbe raggiungere le carote, ma c’è il ruscello. Come possiamo aiutarlo?",
+        title: "Come arriva Pip alle carote?",
+        text: "Guarda il ruscello tra Pip e le carote. Cosa chiediamo a Milo?",
         choices: [
           {
-            label: "Costruiamo un ponte",
+            label: "Un ponte per passare",
             icon: "🌉",
             effect: "bridge-build",
             to: 1,
           },
+          {
+            label: "Una bandierina per decorare",
+            icon: "🚩",
+            feedback:
+              "La bandierina decora la riva, ma resta l’acqua in mezzo. Cosa può unire le due rive?",
+          },
         ],
       },
       {
-        title: "Pip ha bisogno di più spazio.",
-        text: "Il ponte è stretto per Pip. Quale dettaglio possiamo aggiungere alla richiesta?",
+        title: "Il ponte è stretto.",
+        text: "Pip ha provato, ma non riesce a passare. Cosa cambiamo?",
         choices: [
           {
-            label: "Un ponte più largo",
+            label: "Facciamolo più largo",
             icon: "↔",
             effect: "bridge-widen",
             to: 2,
           },
           {
-            label: "Un ponte blu",
+            label: "Coloriamolo di blu",
             icon: "🔵",
-            effect: "bridge-blue",
             feedback:
-              "Ora è blu! Il colore è cambiato. Pip ha ancora bisogno di più spazio per passare.",
+              "È diventato blu, ma lo spazio è lo stesso. Guarda Pip: gli serve un ponte più largo.",
+            effect: "bridge-blue",
           },
         ],
       },
       {
-        title: "La richiesta è diventata più precisa.",
-        text: "“Milo, costruisci un ponte largo per Pip.” Hai spiegato cosa serve e per chi.",
+        title: "Adesso Pip può passare?",
+        text: "Guarda quanto spazio c’è sul ponte. Quale richiesta ha aiutato Pip?",
         choices: [
           {
-            label: "Guardiamo Pip attraversare",
-            icon: "🐰",
+            label: "Un ponte largo per Pip",
+            icon: "↔",
             effect: "cross",
             to: "done",
+          },
+          {
+            label: "Un ponte solo colorato",
+            icon: "🎨",
+            feedback:
+              "Il colore cambia l’aspetto. La larghezza dà a Pip lo spazio per passare. Quale dettaglio ci serve?",
           },
         ],
       },
@@ -68,40 +80,57 @@ window.MiloChapters = [
       "Colore e dimensione sono dettagli concreti. Mostrare il risultato aiuta a collegare le parole alle caratteristiche degli oggetti.",
     steps: [
       {
-        title: "Pip sogna una casetta blu.",
-        text: "Aiutiamo Milo a capire quale colore scegliere. Guarda la casetta mentre cambia.",
+        title: "Pip desidera una casetta blu.",
+        text: "Quale colore chiediamo a Milo per la casetta?",
         choices: [
-          { label: "Una casetta blu", icon: "🔵", effect: "house-blue", to: 1 },
           {
-            label: "Proviamo il rosso",
+            label: "Blu",
+            icon: "🔵",
+            effect: "house-blue",
+            to: 1,
+          },
+          {
+            label: "Rosso",
             icon: "🔴",
-            effect: "house-red",
             feedback:
-              "Ecco il rosso. Pip ci ha chiesto il blu: quale cerchio scegliamo?",
+              "Ecco il rosso. Pip desidera il blu: confrontiamo i due cerchi.",
+            effect: "house-red",
           },
         ],
       },
       {
         title: "C’è spazio per le orecchie?",
-        text: "La casetta è blu, ma piccolina. Pip ha due belle orecchie lunghe. Come possiamo aiutarlo?",
+        text: "Guarda Pip vicino alla piccola casa. Cosa chiediamo di cambiare?",
         choices: [
           {
-            label: "Facciamola più grande",
+            label: "Una casa più grande",
             icon: "🏡",
             effect: "house-large",
             to: 2,
           },
+          {
+            label: "Un altro colore",
+            icon: "🎨",
+            feedback:
+              "Cambiare colore lascia la casa piccola. Le orecchie di Pip hanno bisogno di più spazio.",
+          },
         ],
       },
       {
-        title: "Due dettagli, una richiesta.",
-        text: "“Milo, fai una casetta blu e grande per Pip.” Colore, grandezza e destinatario sono chiari.",
+        title: "Controlliamo la casetta.",
+        text: "Pip voleva il blu e spazio per le orecchie. Quale richiesta descrive la casa che gli serve?",
         choices: [
           {
-            label: "Guardiamo la nuova casetta",
-            icon: "🐰",
+            label: "Blu e grande",
+            icon: "🔵",
             effect: "celebrate",
             to: "done",
+          },
+          {
+            label: "Blu e piccolina",
+            icon: "🔹",
+            feedback:
+              "Il colore va bene. Ma per le orecchie serve anche una casa grande. Guarda la casa e riprova.",
           },
         ],
       },
@@ -120,44 +149,56 @@ window.MiloChapters = [
     steps: [
       {
         title: "“Annaffia quel fiore.”",
-        text: "Ci sono due fiori. Milo non sa quale intendi. Che domanda può farti?",
+        text: "Ci sono due fiori. Milo non sa quale intendi. Come può capirlo?",
         choices: [
           {
-            label: "Quale dei due fiori?",
+            label: "Chiede: quale fiore?",
             icon: "❓",
             effect: "point-flowers",
             to: 1,
+          },
+          {
+            label: "Sceglie senza chiedere",
+            icon: "🤔",
+            feedback:
+              "Potrebbe scegliere un fiore diverso da quello che intendi. Una piccola domanda ci aiuta a capirci.",
           },
         ],
       },
       {
         title: "Il fiore giallo ha sete.",
-        text: "Ora abbiamo un dettaglio: il colore. Aiutiamo Milo a trovare il fiore giusto.",
+        text: "Guarda i due fiori. Quale indichiamo a Milo?",
         choices: [
           {
-            label: "Annaffia il fiore giallo",
+            label: "Il fiore giallo",
             icon: "🌼",
             effect: "water-flower",
             to: 2,
           },
           {
-            label: "Guarda quello rosa",
+            label: "Il fiore rosa",
             icon: "🌸",
-            effect: "point-pink",
             feedback:
-              "Quello è rosa. La richiesta riguarda il fiore giallo: guardiamolo insieme.",
+              "Hai indicato il rosa. Il fiore che ha sete è giallo: confrontiamo i colori.",
+            effect: "point-pink",
           },
         ],
       },
       {
-        title: "Una domanda in più aiuta.",
-        text: "Il fiore ha ricevuto l’acqua. Prima abbiamo chiarito quale fiore, poi abbiamo agito.",
+        title: "Come chiediamo proprio quel fiore?",
+        text: "Ci sono ancora due fiori. Quale frase aiuta Milo a scegliere quello giallo?",
         choices: [
           {
-            label: "Salutiamo il giardino",
-            icon: "🌱",
+            label: "Annaffia il fiore giallo",
+            icon: "🌼",
             effect: "celebrate",
             to: "done",
+          },
+          {
+            label: "Annaffia quel fiore",
+            icon: "🌱",
+            feedback:
+              "“Quel fiore” non dice quale dei due. Il colore è un indizio che possiamo aggiungere.",
           },
         ],
       },
@@ -175,33 +216,57 @@ window.MiloChapters = [
       "Si contano fino a tre oggetti visibili. Se è troppo difficile, l’adulto indica ogni mela mentre conta insieme alla bambina.",
     steps: [
       {
-        title: "Quante mele ci servono?",
-        text: "Per il picnic vogliamo tre mele. Milo ne ha messa una. Contiamola insieme: uno.",
+        title: "Contiamo quello che vediamo.",
+        text: "Guarda il cestino, non gli alberi. Quante mele ci sono adesso?",
         choices: [
           {
-            label: "Contiamo fino a tre",
+            label: "Una mela",
             icon: "🍎",
             effect: "apples-one",
             to: 1,
           },
+          {
+            label: "Tre mele",
+            icon: "🍎 🍎 🍎",
+            feedback:
+              "Indichiamo le mele nel cestino una alla volta: per ora ce n’è una. Le altre sono ancora fuori.",
+          },
         ],
       },
       {
-        title: "Aggiungiamo la quantità.",
-        text: "“Milo, metti tre mele nel cestino.” Guardiamo comparire le mele e contiamole.",
-        choices: [
-          { label: "Tre mele", icon: "③", effect: "apples-three", to: 2 },
-        ],
-      },
-      {
-        title: "Uno, due, tre.",
-        text: "Controlliamo il risultato insieme. La richiesta diceva tre e ora vediamo tre mele.",
+        title: "Per il picnic servono tre mele.",
+        text: "Quale richiesta dice a Milo quante mele mettere nel cestino?",
         choices: [
           {
-            label: "Il cestino è pronto",
-            icon: "🧺",
+            label: "Metti tre mele",
+            icon: "🍎 🍎 🍎",
+            effect: "apples-three",
+            to: 2,
+          },
+          {
+            label: "Metti una mela",
+            icon: "🍎",
+            feedback:
+              "Una è meno di tre. Nel cestino ne vogliamo tre: contiamo uno, due, tre.",
+            effect: "apples-one",
+          },
+        ],
+      },
+      {
+        title: "Controlliamo il risultato.",
+        text: "Indica ogni mela nel cestino mentre conti con un adulto. Quante ne vedi?",
+        choices: [
+          {
+            label: "Tre mele",
+            icon: "🍎 🍎 🍎",
             effect: "celebrate",
             to: "done",
+          },
+          {
+            label: "Una mela",
+            icon: "🍎",
+            feedback:
+              "Proviamo insieme: una, due, tre. Ogni mela si conta una volta.",
           },
         ],
       },
@@ -219,44 +284,57 @@ window.MiloChapters = [
       "Due azioni collegate rendono concreta l’idea di una sequenza di istruzioni. Non si richiede di leggere né di ricordare liste lunghe.",
     steps: [
       {
-        title: "Prepariamo la merenda.",
-        text: "Abbiamo raccolto una mela. Prima la laviamo con l’acqua, poi la mettiamo nel piatto.",
+        title: "Una mela appena raccolta.",
+        text: "Prima di metterla nel piatto, quale azione chiediamo a Milo?",
         choices: [
           {
-            label: "Prima laviamo la mela",
+            label: "Lava la mela",
             icon: "💧",
             effect: "wash-apple",
             to: 1,
           },
           {
-            label: "Il piatto è qui",
+            label: "Mettila subito nel piatto",
             icon: "🍽",
             feedback:
-              "Il piatto è pronto. Prima di servirla, laviamo insieme la mela.",
+              "La mela è appena raccolta. Prima la laviamo con l’acqua, poi la serviamo.",
           },
         ],
       },
       {
         title: "Ora la mela è lavata.",
-        text: "Abbiamo fatto la prima azione. Qual è la prossima?",
+        text: "Abbiamo usato l’acqua. Qual è il prossimo passo per preparare la merenda?",
         choices: [
           {
-            label: "Mettiamola nel piatto",
+            label: "Metterla nel piatto",
             icon: "🍽",
             effect: "serve-apple",
             to: 2,
           },
+          {
+            label: "Lavarla ancora",
+            icon: "💧",
+            feedback:
+              "L’abbiamo già lavata. Per finire la merenda manca il piatto: cosa facciamo adesso?",
+            effect: "wash-apple",
+          },
         ],
       },
       {
-        title: "Prima e poi.",
-        text: "“Milo, prima lava la mela e poi mettila nel piatto.” Abbiamo dato due istruzioni in ordine.",
+        title: "Aiutiamo Milo a ricordare l’ordine.",
+        text: "Quale richiesta racconta le due azioni nell’ordine giusto?",
         choices: [
           {
-            label: "La merenda è pronta",
-            icon: "🍎",
+            label: "Prima acqua, poi piatto",
+            icon: "💧 → 🍽",
             effect: "celebrate",
             to: "done",
+          },
+          {
+            label: "Prima piatto, poi acqua",
+            icon: "🍽 → 💧",
+            feedback:
+              "Prima laviamo la mela. Solo dopo la mettiamo nel piatto: acqua, poi piatto.",
           },
         ],
       },
@@ -274,38 +352,56 @@ window.MiloChapters = [
       "Dire lo scopo della richiesta aiuta a scegliere una soluzione adatta. Il gioco permette di osservare l’effetto della scelta.",
     steps: [
       {
-        title: "Sta piovendo sull’isola.",
-        text: "Pip vorrebbe restare asciutto. Diciamo a Milo non solo cosa vogliamo, ma anche a cosa deve servire.",
+        title: "Sta piovendo su Pip.",
+        text: "Guarda le gocce. Quale bisogno spieghiamo a Milo?",
         choices: [
           {
-            label: "Un riparo per Pip",
-            icon: "🐰",
+            label: "Pip vuole restare asciutto",
+            icon: "☂️",
             effect: "rain-start",
             to: 1,
+          },
+          {
+            label: "Pip vuole fare una festa",
+            icon: "🎈",
+            feedback:
+              "Una festa può aspettare. Guarda le gocce sulle orecchie: adesso Pip cerca un riparo.",
           },
         ],
       },
       {
-        title: "Che cosa ferma le gocce?",
-        text: "Un ombrello aperto può riparare Pip. Un palloncino è bello per una festa, ma non copre le sue orecchie.",
+        title: "Scegliamo un aiuto.",
+        text: "Quale oggetto può coprire Pip e fermare le gocce?",
         choices: [
           {
-            label: "Apriamo l’ombrello",
+            label: "Un ombrello aperto",
             icon: "☂️",
             effect: "umbrella-open",
             to: 2,
           },
+          {
+            label: "Un palloncino",
+            icon: "🎈",
+            feedback:
+              "Il palloncino è piccolo e vola. Non copre Pip dalla pioggia. Quale oggetto si apre sopra di lui?",
+          },
         ],
       },
       {
-        title: "Lo scopo era restare asciutti.",
-        text: "“Milo, apri un ombrello per riparare Pip dalla pioggia.” Abbiamo spiegato il bisogno.",
+        title: "Perché abbiamo aperto l’ombrello?",
+        text: "Guarda Pip sotto il riparo. Quale frase spiega a Milo a cosa serve?",
         choices: [
           {
-            label: "Pip è al riparo",
-            icon: "💛",
+            label: "Per tenere Pip asciutto",
+            icon: "🐰",
             effect: "celebrate",
             to: "done",
+          },
+          {
+            label: "Per cambiare il colore di Pip",
+            icon: "🎨",
+            feedback:
+              "Il colore di Pip non cambia. L’ombrello ferma le gocce: quale bisogno abbiamo risolto?",
           },
         ],
       },
@@ -323,8 +419,8 @@ window.MiloChapters = [
       "Milo dice chiaramente “forse”. La bambina può osservare una prova accessibile e correggere una risposta senza rimproveri.",
     steps: [
       {
-        title: "Cosa c’è nella scatola?",
-        text: "Milo dice: “Forse c’è una pallina!”. La scatola è chiusa: è soltanto un’ipotesi.",
+        title: "Milo dice: “Forse c’è una pallina”.",
+        text: "La scatola è chiusa. Come scopriamo cosa c’è davvero?",
         choices: [
           {
             label: "Apriamo e guardiamo",
@@ -332,24 +428,47 @@ window.MiloChapters = [
             effect: "box-open",
             to: 1,
           },
+          {
+            label: "Diciamo che è una pallina",
+            icon: "⚽",
+            feedback:
+              "“Forse” vuol dire che non sappiamo ancora. Per scoprirlo possiamo aprire e guardare.",
+          },
         ],
       },
       {
-        title: "Dentro c’è una stella!",
-        text: "Ora abbiamo guardato. Possiamo dire a Milo quello che vediamo.",
-        choices: [
-          { label: "Vedo una stella", icon: "⭐", effect: "show-star", to: 2 },
-        ],
-      },
-      {
-        title: "Possiamo correggerci insieme.",
-        text: "“Grazie, avevo fatto un’ipotesi”, dice Milo. Una risposta si può controllare.",
+        title: "Che cosa vedi nella scatola?",
+        text: "Guarda l’oggetto uscito dalla scatola. Quale forma ha?",
         choices: [
           {
-            label: "Abbiamo una prova",
-            icon: "💛",
+            label: "Una stella",
+            icon: "⭐",
+            effect: "show-star",
+            to: 2,
+          },
+          {
+            label: "Una pallina",
+            icon: "⚽",
+            feedback:
+              "La pallina è rotonda. Questo oggetto ha le punte: osserviamolo insieme.",
+          },
+        ],
+      },
+      {
+        title: "Come abbiamo scoperto la stella?",
+        text: "Milo prima aveva un’idea diversa. Cosa ci ha aiutato a sapere?",
+        choices: [
+          {
+            label: "Abbiamo aperto e guardato",
+            icon: "👀",
             effect: "celebrate",
             to: "done",
+          },
+          {
+            label: "Abbiamo indovinato senza guardare",
+            icon: "🤔",
+            feedback:
+              "Prima era soltanto un’idea. Aprendo la scatola abbiamo visto la stella con i nostri occhi.",
           },
         ],
       },
@@ -367,35 +486,57 @@ window.MiloChapters = [
       "Una risposta sicura può essere sbagliata. Conta il confronto con l’oggetto visibile, non l’obbedienza al personaggio.",
     steps: [
       {
-        title: "Milo ha confuso un colore.",
-        text: "La pallina è rossa. Milo dice: “Ecco una pallina blu!”. Guardiamola insieme.",
+        title: "Milo dice: “La pallina è blu”.",
+        text: "Guarda la pallina grande. Cosa possiamo fare prima di fidarci della risposta?",
         choices: [
-          { label: "Guardiamo bene", icon: "🔎", effect: "ball-show", to: 1 },
-        ],
-      },
-      {
-        title: "Che colore vedi?",
-        text: "Puoi aiutare Milo a correggersi. Scegli il colore della pallina.",
-        choices: [
-          { label: "È rossa", icon: "🔴", effect: "ball-correct", to: 2 },
           {
-            label: "Confrontiamo con il blu",
-            icon: "🔵",
-            effect: "ball-compare",
+            label: "Guardare il suo colore",
+            icon: "👀",
+            effect: "ball-show",
+            to: 1,
+          },
+          {
+            label: "Ripetere senza guardare",
+            icon: "💬",
             feedback:
-              "Ora vedi anche una piccola pallina blu. Quella grande è rossa: quale colore descrive la grande?",
+              "Anche Milo può confondersi. La pallina è qui: guardarla ci aiuta a controllare.",
           },
         ],
       },
       {
-        title: "Grazie per aver controllato.",
-        text: "Milo si corregge: “La pallina è rossa”. Hai confrontato le parole con quello che vedi.",
+        title: "Che colore vedi davvero?",
+        text: "Osserva la pallina grande. Quale colore diciamo a Milo?",
         choices: [
           {
-            label: "Ora siamo d’accordo",
-            icon: "🤝",
+            label: "Rossa",
+            icon: "🔴",
+            effect: "ball-correct",
+            to: 2,
+          },
+          {
+            label: "Blu",
+            icon: "🔵",
+            feedback:
+              "Ora c’è anche una pallina blu più piccola per confrontare. Quella grande è diversa: guardiamola.",
+            effect: "ball-compare",
+          },
+        ],
+      },
+      {
+        title: "Aiutiamo Milo a correggere la frase.",
+        text: "Quale richiesta descrive la pallina grande che vediamo?",
+        choices: [
+          {
+            label: "La pallina grande è rossa",
+            icon: "🔴",
             effect: "celebrate",
             to: "done",
+          },
+          {
+            label: "La pallina grande è blu",
+            icon: "🔵",
+            feedback:
+              "Confrontiamo la frase con la pallina grande. È rossa: possiamo dirlo anche se prima Milo ha detto blu.",
           },
         ],
       },
@@ -414,37 +555,55 @@ window.MiloChapters = [
     steps: [
       {
         title: "Dove porta questo sentiero?",
-        text: "Milo non lo sa ancora. Il cartello è girato e non abbiamo informazioni sufficienti.",
+        text: "Il cartello è girato. Non abbiamo ancora un indizio. Cosa diciamo?",
         choices: [
           {
-            label: "Chiediamo un indizio",
+            label: "Non lo sappiamo ancora",
             icon: "❓",
             effect: "sign-question",
             to: 1,
           },
-        ],
-      },
-      {
-        title: "Guardiamo il cartello insieme.",
-        text: "Un adulto ci aiuta a girarlo. Ora la freccia indica la casetta.",
-        choices: [
           {
-            label: "Giriamo il cartello",
-            icon: "➡",
-            effect: "sign-reveal",
-            to: 2,
+            label: "Sicuramente al picnic",
+            icon: "🧺",
+            feedback:
+              "Potrebbe, ma non abbiamo guardato nessun indizio. Possiamo dire “non lo so ancora”.",
           },
         ],
       },
       {
-        title: "Ora abbiamo un’informazione.",
-        text: "Prima non sapevamo. Abbiamo cercato un indizio con un adulto, invece di inventare.",
+        title: "Cerchiamo un indizio con un adulto.",
+        text: "Come possiamo scoprire dove porta il sentiero?",
         choices: [
           {
-            label: "Salutiamo il sentiero",
+            label: "Guardiamo il cartello",
+            icon: "➡",
+            effect: "sign-reveal",
+            to: 2,
+          },
+          {
+            label: "Inventiamo una destinazione",
+            icon: "✨",
+            feedback:
+              "Inventare è bello nelle storie. Qui cerchiamo dove porta davvero il sentiero: il cartello può aiutarci.",
+          },
+        ],
+      },
+      {
+        title: "Ora guarda la freccia.",
+        text: "Quale luogo è comparso vicino al cartello?",
+        choices: [
+          {
+            label: "Una casetta",
             icon: "🏡",
             effect: "celebrate",
             to: "done",
+          },
+          {
+            label: "Un tavolo da picnic",
+            icon: "🧺",
+            feedback:
+              "Cerca il piccolo tetto e le pareti vicino alla freccia: è una casetta.",
           },
         ],
       },
@@ -462,26 +621,26 @@ window.MiloChapters = [
       "Nessun indirizzo, nome reale o dato personale viene chiesto o inserito. Si usa un nome di fantasia e si ricorda di chiedere a un adulto prima di condividere informazioni.",
     steps: [
       {
-        title: "Una casetta di fantasia.",
-        text: "Prepariamo un cartello per la casa di Pip. Possiamo inventare un nome, senza scrivere dove abitiamo davvero.",
+        title: "Un cartello per la casa di Pip.",
+        text: "Stiamo giocando. Quale nome possiamo chiedere a Milo senza dire dove abitiamo?",
         choices: [
           {
-            label: "Inventiamo un nome",
+            label: "Un nome inventato",
             icon: "✨",
             effect: "sign-private",
             to: 1,
           },
           {
-            label: "Chiediamo a un adulto",
-            icon: "🤝",
-            effect: "sign-private",
-            to: 1,
+            label: "Il nostro vero indirizzo",
+            icon: "🏠",
+            feedback:
+              "L’indirizzo vero è un’informazione personale. Per il gioco inventiamo un nome; delle informazioni vere parliamo con un adulto.",
           },
         ],
       },
       {
-        title: "La Casa delle Nuvole.",
-        text: "È un nome inventato per il gioco. Il nostro vero indirizzo resta una cosa da gestire con un adulto.",
+        title: "Scegliamo un nome di fantasia.",
+        text: "Quale nome è inventato per la casetta del gioco?",
         choices: [
           {
             label: "Casa delle Nuvole",
@@ -489,17 +648,29 @@ window.MiloChapters = [
             effect: "sign-fantasy",
             to: 2,
           },
+          {
+            label: "La via e il numero di casa mia",
+            icon: "🏠",
+            feedback:
+              "La via e il numero dicono dove abitiamo davvero. La casa di Pip può avere un nome di fantasia.",
+          },
         ],
       },
       {
-        title: "Fantasia e informazioni vere.",
-        text: "Possiamo giocare con i nomi inventati. Prima di condividere cose vere su di noi, chiediamo a un adulto.",
+        title: "E se ci chiedono dove abitiamo?",
+        text: "Prima di condividere informazioni vere su di noi, cosa facciamo?",
         choices: [
           {
-            label: "Il cartello è pronto",
-            icon: "🏡",
+            label: "Chiediamo a un adulto",
+            icon: "🤝",
             effect: "celebrate",
             to: "done",
+          },
+          {
+            label: "Le diciamo subito",
+            icon: "💬",
+            feedback:
+              "Prima ci fermiamo e chiediamo a un adulto di fiducia. Nel gioco possiamo continuare con nomi inventati.",
           },
         ],
       },
@@ -517,38 +688,57 @@ window.MiloChapters = [
       "Si combinano due proprietà già conosciute: colore e larghezza. L’adulto può ricordare la prima mentre si sceglie la seconda.",
     steps: [
       {
-        title: "Un ponte largo e blu.",
-        text: "Pip vuole attraversare. Questa volta vorrebbe anche un ponte blu. Facciamo una cosa alla volta.",
+        title: "Pip chiede un ponte blu e largo.",
+        text: "Cominciamo dal colore. Quale scegliamo?",
         choices: [
           {
-            label: "Prima lo coloriamo di blu",
+            label: "Blu",
             icon: "🔵",
             effect: "bridge-blue",
             to: 1,
           },
-        ],
-      },
-      {
-        title: "È blu. C’è abbastanza spazio?",
-        text: "Abbiamo scelto il colore. Aggiungiamo anche la larghezza per far passare Pip.",
-        choices: [
           {
-            label: "Ora rendiamolo largo",
-            icon: "↔",
-            effect: "bridge-widen",
-            to: 2,
+            label: "Lasciamo il colore del legno",
+            icon: "🟤",
+            feedback:
+              "Il legno è marrone. Pip ha chiesto il blu: quale cerchio gli corrisponde?",
           },
         ],
       },
       {
-        title: "Largo e blu, proprio così.",
-        text: "“Milo, fai un ponte largo e blu per Pip.” Guardiamo se entrambe le richieste sono rispettate.",
+        title: "Il colore è giusto. E lo spazio?",
+        text: "Guarda il ponte stretto e Pip. Quale altro dettaglio aggiungiamo alla richiesta?",
         choices: [
           {
-            label: "Facciamo passare Pip",
-            icon: "🐰",
+            label: "Più largo per Pip",
+            icon: "↔",
+            effect: "bridge-widen",
+            to: 2,
+          },
+          {
+            label: "Ancora più blu",
+            icon: "🔵",
+            feedback:
+              "Il blu c’è già. Ora manca lo spazio per passare: dobbiamo cambiare la larghezza.",
+            effect: "bridge-blue",
+          },
+        ],
+      },
+      {
+        title: "Controlliamo le due richieste.",
+        text: "Guarda colore e larghezza. Quale frase dice tutto quello che serve a Pip?",
+        choices: [
+          {
+            label: "Un ponte blu e largo",
+            icon: "🔵 ↔",
             effect: "cross",
             to: "done",
+          },
+          {
+            label: "Un ponte blu",
+            icon: "🔵",
+            feedback:
+              "Il colore è giusto, ma manca un dettaglio nella frase: per Pip serve anche lo spazio.",
           },
         ],
       },
@@ -566,38 +756,56 @@ window.MiloChapters = [
       "Una missione conclusiva riunisce destinatario, quantità e controllo. Le competenze vengono riprese nel gioco e nelle attività reali, senza attribuire al percorso risultati futuri garantiti.",
     steps: [
       {
-        title: "Un picnic per due amici.",
-        text: "Prepariamo un tavolino per Milo e Pip. Sono due: scegliamo due posti.",
+        title: "Un picnic per Milo e Pip.",
+        text: "Conta gli amici: Milo e Pip. Quanti posti chiediamo?",
         choices: [
           {
-            label: "Due posti per i due amici",
-            icon: "②",
+            label: "Due posti",
+            icon: "🪑 🪑",
             effect: "party-setup",
             to: 1,
           },
-        ],
-      },
-      {
-        title: "Una mela per ciascuno.",
-        text: "Ci servono due mele, una per ogni posto. Diciamolo chiaramente a Milo.",
-        choices: [
           {
-            label: "Metti due mele sul tavolo",
-            icon: "🍎",
-            effect: "party-two",
-            to: 2,
+            label: "Un posto",
+            icon: "🪑",
+            feedback:
+              "Con un posto uno dei due amici resta senza. Indichiamoli insieme: Milo, Pip.",
           },
         ],
       },
       {
-        title: "Guardiamo insieme il risultato.",
-        text: "Due posti e due mele. C’è quello che avevamo chiesto? Prima abbiamo spiegato, poi abbiamo controllato.",
+        title: "Una mela per ogni amico.",
+        text: "Ci sono due posti. Quante mele chiediamo, per darne una a ciascuno?",
         choices: [
           {
-            label: "Sì, il picnic è pronto",
-            icon: "🎉",
+            label: "Due mele",
+            icon: "🍎 🍎",
+            effect: "party-two",
+            to: 2,
+          },
+          {
+            label: "Una mela",
+            icon: "🍎",
+            feedback:
+              "Con una mela uno dei due amici resta senza. Un amico, una mela; due amici, due mele.",
+          },
+        ],
+      },
+      {
+        title: "Controlliamo il picnic.",
+        text: "Guarda i posti e le mele. Ogni amico può avere una mela?",
+        choices: [
+          {
+            label: "Sì: due amici e due mele",
+            icon: "🍎 🍎",
             effect: "celebrate",
             to: "done",
+          },
+          {
+            label: "No: manca una mela",
+            icon: "🍎",
+            feedback:
+              "Indichiamo le due mele: una per Milo e una per Pip. Ora bastano per entrambi.",
           },
         ],
       },
