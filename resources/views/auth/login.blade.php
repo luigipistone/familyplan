@@ -21,4 +21,4 @@
     <button>Entra</button>
     <a href="{{ route('password.request') }}">Password dimenticata</a>
 </form>
-<script src="/js/app.js"></script></body></html>
+<script src="/js/app.js?v={{ filemtime(public_path('js/app.js')) }}"></script></body></html>

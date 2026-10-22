@@ -419,6 +419,7 @@ function closeTopMenu(menu, immediate = false) {
 function prepareTopMenu() {
   const panel = document.querySelector('[data-top-menu-panel]');
   const backdrop = document.querySelector('[data-top-menu-backdrop]');
+  if (!panel || !backdrop) return;
   if (panel?.parentElement !== document.body) document.body.append(panel);
   if (backdrop?.parentElement !== document.body) document.body.insertBefore(backdrop, panel);
 }
