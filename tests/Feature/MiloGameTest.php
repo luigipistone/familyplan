@@ -32,6 +32,8 @@ class MiloGameTest extends TestCase
             ->assertSee('familyplan.milo.v1.user-'.$user->id, false)
             ->assertSee('/vendor/three/three-0.160.0.min.js', false)
             ->assertSee('/js/milo/chapters.js', false)
+            ->assertSee('/js/milo/worlds.js', false)
+            ->assertSee('id="exploreDialog"', false)
             ->assertSee('id="chaptersDialog"', false);
     }
 
