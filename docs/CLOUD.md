@@ -2,8 +2,8 @@
 
 ## Stato verificato il 21 ottobre 2026
 
-GitHub main conteneva una vecchia applicazione PHP, diversa da quella Laravel online.
-Il ramo codex/cloud-ready-laravel contiene il codice locale attuale, confrontato con
+La PR #24 e' stata unita: main contiene ora l'applicazione Laravel attuale.
+Il precedente ramo codex/cloud-ready-laravel conteneva il codice locale, confrontato con
 Plesk per app, config, routes, resources, migration, asset JS/CSS e lockfile.
 Unica differenza sostanziale trovata: UserFields.vue locale include etichetta nuova
 password e autocomplete=new-password, assenti nel sorgente Plesk. Si conserva la
@@ -25,13 +25,22 @@ I suggerimenti sono euristiche attuali, da perfezionare con test mirati.
 ## Ambiente Codex Cloud
 
 1. Collegare luigipistone/familyplan nell'ambiente Codex Cloud.
-2. Selezionare questo ramo per la verifica, oppure main dopo il merge della PR.
+2. Selezionare main.
 3. Disponibilita' runtime: PHP 8.3 con pdo_sqlite, pdo_mysql, mbstring, xml, curl,
    zip, Composer 2 e Node 22 con npm.
 4. Setup: bash scripts/cloud-setup.sh.
 5. Non caricare database, .env, config.local.php o password di produzione.
 6. Per test API reali, configurare TMDB_API_KEY e GOOGLE_WEATHER_API_KEY tramite
    le impostazioni riservate dell'ambiente; non sono necessarie ai test automatici.
+
+Nell'ambiente gia' predisposto, caricare prima:
+
+    source /workspace/.familyplan-cloud/env.sh
+
+Questo seleziona i wrapper Docker con PHP 8.3, Composer 2 e Node 22. Il PATH
+iniziale del contenitore esterno puo' avere versioni diverse o non includere PHP.
+Per i test usare `bash /workspace/.familyplan-cloud/test.sh --do-not-cache-result`,
+che rimuove le variabili locali lasciando a phpunit.xml la configurazione in memoria.
 
 Lo script prepara un database SQLite vuoto e non crea utenti reali. Le variabili
 per avviare successivamente il server devono essere presenti nell'ambiente:
@@ -60,7 +69,10 @@ compilati, conservando .env, config.local.php, storage e public/media.
 Prima di migration fare un backup. Installare dipendenze Composer con --no-dev,
 applicare php artisan migrate --force, poi optimize:clear, config:cache,
 route:cache e view:cache. Non eseguire seeders per aggiornamenti ordinari.
-Nessun deploy automatico o credenziale SSH e' stato configurato in GitHub.
+Il workflow `.github/workflows/ci.yml` prepara un archivio di codice, vendor di
+produzione e asset Vite dopo i test. Il job Plesk parte solo su main e soltanto
+quando la variabile repository `PLESK_DEPLOY_ENABLED` vale `true`. Nessun accesso
+SSH e' incluso in Git. Vedere [DEPLOY.md](DEPLOY.md) per attivazione e recupero.
 
 ## Proseguire da un altro dispositivo
 

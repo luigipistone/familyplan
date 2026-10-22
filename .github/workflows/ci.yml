@@ -1,5 +1,14 @@
 name: Verify Laravel
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Verifica accesso Plesk oppure pubblica main
+        type: choice
+        options: [check, deploy]
+        default: check
 permissions:
   contents: read
 jobs:
@@ -18,3 +27,101 @@ jobs:
           cache: npm
       - run: bash scripts/cloud-setup.sh
       - run: vendor/bin/phpunit
+      - name: Verify deploy safety
+        run: |
+          bash -n scripts/plesk-deploy.sh scripts/tests/plesk-deploy-test.sh
+          bash scripts/tests/plesk-deploy-test.sh
+      - name: Prepare production artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+          mkdir -p "$RUNNER_TEMP/release"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/release"
+          cp -a vendor "$RUNNER_TEMP/release/"
+          mkdir -p "$RUNNER_TEMP/release/public/build"
+          cp -a public/build/. "$RUNNER_TEMP/release/public/build/"
+          tar -czf "$RUNNER_TEMP/familyplan.tar.gz" -C "$RUNNER_TEMP/release" .
+      - uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          name: familyplan-${{ github.sha }}
+          path: ${{ runner.temp }}/familyplan.tar.gz
+          retention-days: 7
+
+  deploy:
+    needs: test
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      github.event_name != 'pull_request' &&
+      vars.PLESK_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://familyplan.lu3g.com
+    concurrency:
+      group: familyplan-production
+      cancel-in-progress: false
+    env:
+      PLESK_HOST: ${{ vars.PLESK_HOST }}
+      PLESK_PORT: ${{ vars.PLESK_PORT || '22' }}
+      PLESK_USER: ${{ vars.PLESK_USER }}
+      PLESK_PATH: ${{ vars.PLESK_PATH }}
+      PLESK_PHP: ${{ vars.PLESK_PHP || '/opt/plesk/php/8.3/bin/php' }}
+      OPERATION: ${{ inputs.operation || 'deploy' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: familyplan-${{ github.sha }}
+          path: ${{ runner.temp }}/artifact
+      - name: Reject superseded main revision
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
+          test "$latest" = "$GITHUB_SHA" || { echo 'main has changed; deploy the latest run instead.'; exit 1; }
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.PLESK_SSH_PRIVATE_KEY }}
+          KNOWN_HOSTS: ${{ secrets.PLESK_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          [[ "$PLESK_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$PLESK_USER" =~ ^[a-zA-Z0-9_][a-zA-Z0-9_.-]*$ ]]
+          [[ "$PLESK_PORT" =~ ^[0-9]+$ ]]
+          [[ "$PLESK_PATH" =~ ^/[a-zA-Z0-9_./-]+$ && "$PLESK_PATH" != / ]]
+          [[ "$PLESK_PHP" =~ ^/[a-zA-Z0-9_./-]+$ ]]
+          test -n "$SSH_KEY" && test -n "$KNOWN_HOSTS"
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host plesk-deploy
+            HostName $PLESK_HOST
+            User $PLESK_USER
+            Port $PLESK_PORT
+            IdentityFile ~/.ssh/id_ed25519
+            IdentitiesOnly yes
+            BatchMode yes
+            StrictHostKeyChecking yes
+            ConnectTimeout 20
+            ServerAliveInterval 30
+          EOF
+      - name: Verify and deploy
+        run: |
+          set -euo pipefail
+          remote_dir=$(ssh plesk-deploy 'umask 077; mktemp -d "$HOME/.familyplan-deploy.XXXXXXXX"')
+          [[ "$remote_dir" =~ ^/[a-zA-Z0-9_./-]+$ ]]
+          cleanup() { ssh plesk-deploy "rm -rf -- '$remote_dir'" || true; }
+          trap cleanup EXIT
+          scp scripts/plesk-deploy.sh plesk-deploy:"$remote_dir/deploy.sh"
+          scp "$RUNNER_TEMP/artifact/familyplan.tar.gz" plesk-deploy:"$remote_dir/familyplan.tar.gz"
+          ssh plesk-deploy "bash '$remote_dir/deploy.sh' '$PLESK_PATH' '$PLESK_PHP' '$remote_dir/familyplan.tar.gz' '$OPERATION'"
+      - name: Check public health endpoint
+        if: env.OPERATION == 'deploy'
+        run: curl --fail --silent --show-error --retry 5 --retry-delay 5 --retry-all-errors https://familyplan.lu3g.com/up
+      - name: Remove SSH key
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519
