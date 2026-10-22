@@ -1006,10 +1006,17 @@
     mouse = new THREE.Vector2(),
     plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.26);
   function moveTo(p) {
-    const radius = Math.hypot(p.x, p.z);
-    if (radius > 4.9) {
-      p.x *= 4.9 / radius;
-      p.z *= 4.9 / radius;
+    const shape = world.spec.shape;
+    if (shape === "square" || shape === "split") {
+      p.x = THREE.MathUtils.clamp(p.x, -4.2, 4.2);
+      p.z = THREE.MathUtils.clamp(p.z, -3.35, 3.35);
+    } else {
+      const depth = shape === "oval" ? 3.5 : 4.65;
+      const radius = Math.hypot(p.x / 4.65, p.z / depth);
+      if (radius > 1) {
+        p.x /= radius;
+        p.z /= radius;
+      }
     }
     route = [];
     if (world.spec.river) {
