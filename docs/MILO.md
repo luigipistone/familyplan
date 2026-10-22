@@ -25,7 +25,14 @@ classifiche o serie giornaliere:
 11. Due dettagli per il ponte — combinare colore e larghezza.
 12. La festa delle buone domande — destinatari, quantità e verifica finale.
 
-Ogni capitolo ha tre passaggi brevi, cambiamenti visibili nella scena e un’attività
+Ogni capitolo ha tre passaggi con due scelte concrete e conseguenze diverse:
+osservare un bisogno, scegliere un’istruzione, controllare il risultato. Nessun
+passaggio didattico è un singolo pulsante per continuare. Un tentativo non adatto
+resta sullo stesso passaggio e spiega con calma cosa osservare, senza punteggi o
+penalità. Le posizioni delle due opzioni variano tra le partite e restano stabili
+mentre si riprova. La sintesi vocale legge entrambe nell’ordine mostrato.
+
+Ogni capitolo mantiene cambiamenti visibili nella scena e un’attività
 finale da fare fuori dallo schermo con un adulto. L’obiettivo è una sessione di
 circa cinque minuti comprensiva dell’attività reale, senza prolungare artificialmente
 il gioco. Le scelte sono accompagnate da simboli e dalla lettura facoltativa di
