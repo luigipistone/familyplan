@@ -57,6 +57,20 @@ rilascia geometrie e materiali della scena precedente.
 
 ## Comandi e progressi
 
+Interfaccia con due grandi scelte illustrate, testo delle opzioni da 17–20 px,
+simboli separati e comandi principali da 48–56 px. In vista restano voce, schermo
+intero e menu; capitoli, esplorazione, pausa e informazioni sono nel menu. La scheda
+missione resta leggibile e scorre sugli schermi piccoli o in orizzontale.
+
+La vista iniziale è più ravvicinata e centrata nello spazio libero tra comandi e
+missione. Trascinamento con un dito o tasto sinistro del mouse per ruotare;
+pizzico con due dita o rotella per lo zoom; due dita insieme o tasto destro per
+spostare l’inquadratura. Zoom e inclinazione hanno limiti; “Rimetti la vista” nel
+menu ripristina l’inquadratura senza riavviare la missione. Il trascinamento non
+attiva scelte o oggetti: solo un tocco breve lo fa. Gesti annullati e interruzioni
+non vengono interpretati come tocchi. La vista non viene salvata e si ripristina
+al cambio capitolo. Nel menu restano pulsanti di zoom utilizzabili con tastiera.
+
 Tocco/clic sul prato per muovere Milo. Su desktop, dopo aver dato il focus alla
 scena, frecce o WASD. Pulsanti per voce, pausa, capitoli, informazioni e schermo
 intero. Il pulsante sopra il gioco e quello nella scena mantengono lo stesso
