@@ -97,6 +97,11 @@
     return seed / 4294967296;
   };
   let world = null;
+  const view = { yaw: 0, tilt: 0, zoom: 1, pan: new THREE.Vector3() };
+  let pixelsPerUnit = 50;
+  let viewportWidth = 0,
+    viewportHeight = 0;
+
   const reducedMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)",
   ).matches;
@@ -320,7 +325,14 @@
       ...choices.map((choice) => {
         const button = document.createElement("button");
         button.className = "action" + (choice.secondary ? " secondary" : "");
-        button.textContent = `${choice.icon || ""}  ${choice.label}`;
+        const icon = document.createElement("span");
+        icon.className = "action-icon";
+        icon.textContent = choice.icon || "";
+        icon.setAttribute("aria-hidden", "true");
+        const label = document.createElement("span");
+        label.className = "action-label";
+        label.textContent = choice.label;
+        button.append(icon, label);
         if (choice.effect) button.dataset.effect = choice.effect;
         button.dataset.choice =
           chapter().steps[stepIndex].choices.indexOf(choice);
@@ -875,7 +887,7 @@
     $("chapterSkill").textContent = chapter().skill;
     $("parentNote").textContent = chapter().parent;
     renderStep();
-    resize();
+    resetCamera();
   }
   function isPaused() {
     return (
@@ -883,11 +895,13 @@
       document.hidden ||
       $("parent").open ||
       $("chaptersDialog").open ||
-      $("exploreDialog").open
+      $("exploreDialog").open ||
+      $("toolsDialog").open
     );
   }
   function syncPause() {
     if (isPaused()) {
+      clearGestures();
       if (frameId !== null) cancelAnimationFrame(frameId);
       frameId = null;
       stopVoice();
@@ -901,11 +915,12 @@
       manualPaused ? "Riprendi il gioco" : "Metti in pausa",
     );
     $("pause").innerHTML = manualPaused
-      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7Z"/></svg>'
-      : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+      ? '<span aria-hidden="true">▶</span> Riprendi'
+      : '<span aria-hidden="true">Ⅱ</span> Pausa';
     $("actions").inert = manualPaused;
   }
   function openChapters() {
+    $("toolsDialog").close();
     $("chapterGrid").replaceChildren(
       ...chapters.map((c, index) => {
         const button = document.createElement("button");
@@ -952,13 +967,20 @@
     else toast(info[3]);
   }
   listen($("exploreButton"), "click", () => {
+    $("toolsDialog").close();
     $("exploreTitle").textContent = world.spec.name;
     $("discoveryList").replaceChildren(
       ...world.spec.discoveries.map((info) => {
         const button = document.createElement("button");
         button.className = "action";
         button.dataset.discovery = info[0];
-        button.textContent = info[1] + " " + info[2];
+        const icon = document.createElement("span");
+        icon.className = "action-icon";
+        icon.textContent = info[1];
+        icon.setAttribute("aria-hidden", "true");
+        const label = document.createElement("span");
+        label.textContent = info[2];
+        button.append(icon, label);
         button.onclick = () => {
           $("exploreDialog").close();
           discover(info[0]);
@@ -973,12 +995,29 @@
   listen($("chaptersButton"), "click", openChapters);
   listen($("closeChapters"), "click", () => $("chaptersDialog").close());
   listen($("info"), "click", () => {
+    $("toolsDialog").close();
     $("parent").showModal();
     syncPause();
   });
   listen($("closeInfo"), "click", () => $("parent").close());
   listen($("closeInfoBottom"), "click", () => $("parent").close());
-  for (const dialog of [$("parent"), $("chaptersDialog"), $("exploreDialog")])
+  listen($("toolsButton"), "click", () => {
+    $("toolsDialog").showModal();
+    syncPause();
+  });
+  listen($("closeTools"), "click", () => $("toolsDialog").close());
+  listen($("resetView"), "click", () => {
+    resetCamera();
+    $("toolsDialog").close();
+  });
+  listen($("zoomIn"), "click", () => changeZoom(view.zoom * 1.2));
+  listen($("zoomOut"), "click", () => changeZoom(view.zoom / 1.2));
+  for (const dialog of [
+    $("toolsDialog"),
+    $("parent"),
+    $("chaptersDialog"),
+    $("exploreDialog"),
+  ])
     listen(dialog, "close", syncPause);
   listen($("pause"), "click", () => {
     manualPaused = !manualPaused;
@@ -1052,9 +1091,12 @@
       window.parent.document.documentElement.classList.contains(
         "milo-immersive",
       ) &&
-      ![$("parent"), $("chaptersDialog"), $("exploreDialog")].some(
-        (dialog) => dialog.open,
-      )
+      ![
+        $("toolsDialog"),
+        $("parent"),
+        $("chaptersDialog"),
+        $("exploreDialog"),
+      ].some((dialog) => dialog.open)
     )
       toggleFullscreen();
   });
@@ -1096,8 +1138,7 @@
     marker.position.set(p.x, 0.279, p.z);
     marker.visible = true;
   }
-  listen(canvas, "pointerdown", (e) => {
-    if (isPaused()) return;
+  function tapWorld(e) {
     canvas.focus({ preventScroll: true });
     mouse.set(
       (e.clientX / innerWidth) * 2 - 1,
@@ -1133,7 +1174,115 @@
     }
     const p = new THREE.Vector3();
     if (ray.ray.intersectPlane(plane, p)) moveTo(p);
+  }
+  const pointers = new Map();
+  let gesture = null;
+  let dragged = false;
+  function clearGestures() {
+    const ids = [...pointers.keys()];
+    pointers.clear();
+    gesture = null;
+    dragged = false;
+    for (const id of ids) {
+      if (canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
+    }
+  }
+  function snapshotGesture() {
+    const points = [...pointers.values()];
+    if (!points.length) return null;
+    const a = points[0],
+      b = points[1] || a;
+    return {
+      x: (a.x + b.x) / 2,
+      y: (a.y + b.y) / 2,
+      distance: points.length > 1 ? Math.hypot(a.x - b.x, a.y - b.y) : 0,
+    };
+  }
+  function panView(dx, dy) {
+    const base = world.spec.camera;
+    const angle = Math.atan2(base[0], base[2]) + view.yaw;
+    view.pan.x +=
+      (-Math.cos(angle) * dx - Math.sin(angle) * dy * 1.4) / pixelsPerUnit;
+    view.pan.z +=
+      (Math.sin(angle) * dx - Math.cos(angle) * dy * 1.4) / pixelsPerUnit;
+    view.pan.x = THREE.MathUtils.clamp(view.pan.x, -3.5, 3.5);
+    view.pan.z = THREE.MathUtils.clamp(view.pan.z, -3.5, 3.5);
+  }
+  listen(canvas, "pointerdown", (e) => {
+    if (isPaused() || (e.pointerType === "mouse" && ![0, 2].includes(e.button)))
+      return;
+    pointers.set(e.pointerId, {
+      x: e.clientX,
+      y: e.clientY,
+      startX: e.clientX,
+      startY: e.clientY,
+      time: performance.now(),
+      pan: e.button === 2,
+    });
+    canvas.setPointerCapture(e.pointerId);
+    if (pointers.size > 1) dragged = true;
+    gesture = snapshotGesture();
   });
+  listen(canvas, "pointermove", (e) => {
+    const point = pointers.get(e.pointerId);
+    if (!point || isPaused()) return;
+    point.x = e.clientX;
+    point.y = e.clientY;
+    if (Math.hypot(point.x - point.startX, point.y - point.startY) > 9)
+      dragged = true;
+    const next = snapshotGesture();
+    if (dragged && gesture) {
+      const dx = next.x - gesture.x,
+        dy = next.y - gesture.y;
+      if (pointers.size > 1) {
+        if (gesture.distance > 12 && next.distance > 12)
+          view.zoom = THREE.MathUtils.clamp(
+            (view.zoom * next.distance) / gesture.distance,
+            0.8,
+            2.5,
+          );
+        panView(dx, dy);
+      } else if (point.pan) panView(dx, dy);
+      else {
+        view.yaw = (view.yaw - dx * 0.008) % (Math.PI * 2);
+        view.tilt = THREE.MathUtils.clamp(view.tilt + dy * 0.006, -0.35, 0.35);
+      }
+      resize();
+    }
+    gesture = next;
+  });
+  listen(canvas, "pointerup", (e) => {
+    const point = pointers.get(e.pointerId);
+    if (!point) return;
+    const tap =
+      !dragged &&
+      pointers.size === 1 &&
+      !point.pan &&
+      performance.now() - point.time < 700;
+    pointers.delete(e.pointerId);
+    if (canvas.hasPointerCapture(e.pointerId))
+      canvas.releasePointerCapture(e.pointerId);
+    gesture = snapshotGesture();
+    if (!pointers.size) dragged = false;
+    if (tap && !isPaused()) tapWorld(e);
+  });
+  listen(canvas, "pointercancel", clearGestures);
+  listen(canvas, "lostpointercapture", (e) => {
+    if (pointers.has(e.pointerId)) clearGestures();
+  });
+  listen(canvas, "contextmenu", (e) => e.preventDefault());
+  canvas.addEventListener(
+    "wheel",
+    (e) => {
+      if (isPaused()) return;
+      e.preventDefault();
+      changeZoom(
+        view.zoom *
+          Math.exp(-THREE.MathUtils.clamp(e.deltaY, -100, 100) * 0.002),
+      );
+    },
+    { passive: false, signal: events.signal },
+  );
   listen(canvas, "keydown", (e) => {
     if (isPaused()) return;
     const keys = {
@@ -1154,24 +1303,79 @@
     p.z += direction[1] * 0.45;
     moveTo(p);
   });
+  function changeZoom(value) {
+    view.zoom = THREE.MathUtils.clamp(value, 0.8, 2.5);
+    resize();
+  }
+  function resetCamera() {
+    clearGestures();
+    view.yaw = 0;
+    view.tilt = 0;
+    view.zoom = 1;
+    view.pan.set(0, 0, 0);
+    resize();
+  }
   function resize() {
-    const a = innerWidth / innerHeight;
-    renderer.setSize(innerWidth, innerHeight, false);
-    const span = a < 0.85 ? 12 / a : 12.8;
-    const short = innerHeight < 570 && a > 1.4;
-    const shift = short ? span * a * 0.18 : 0;
-    camera.left = (-span * a) / 2 + shift;
-    camera.right = (span * a) / 2 + shift;
-    camera.top = span / 2;
-    camera.bottom = -span / 2;
-    look.set(0, 0, a < 0.85 ? 1.4 : 1.5);
+    if (!world) return;
+    if (viewportWidth !== innerWidth || viewportHeight !== innerHeight) {
+      renderer.setSize(innerWidth, innerHeight, false);
+      viewportWidth = innerWidth;
+      viewportHeight = innerHeight;
+    }
+    const hud = document.querySelector(".hud").getBoundingClientRect();
+    const card = document.querySelector(".card").getBoundingClientRect();
+    const landscape = innerWidth / innerHeight > 1.4 && innerHeight <= 600;
+    const area = {
+      left: 12,
+      top: hud.bottom + 12,
+      right: landscape ? Math.max(180, card.left - 12) : innerWidth - 12,
+      bottom: landscape
+        ? innerHeight - 12
+        : Math.max(hud.bottom + 110, card.top - 12),
+    };
+    pixelsPerUnit =
+      Math.max(
+        15,
+        Math.min(
+          (area.right - area.left) / (innerWidth < 700 ? 7.2 : 9),
+          (area.bottom - area.top) / (innerWidth < 700 ? 3.8 : 5.5),
+        ),
+      ) * view.zoom;
+    const cx = (area.left + area.right) / 2,
+      cy = (area.top + area.bottom) / 2;
+    camera.left = -cx / pixelsPerUnit;
+    camera.right = (innerWidth - cx) / pixelsPerUnit;
+    camera.top = cy / pixelsPerUnit;
+    camera.bottom = -(innerHeight - cy) / pixelsPerUnit;
+    const base = world.spec.camera;
+    const radius = Math.hypot(...base);
+    const yaw = Math.atan2(base[0], base[2]) + view.yaw;
+    const tilt = THREE.MathUtils.clamp(
+      Math.atan2(base[1], Math.hypot(base[0], base[2])) + view.tilt,
+      0.35,
+      1.25,
+    );
+    look.copy(view.pan).add(new THREE.Vector3(-0.25, 0.65, 0.3));
     camera.position
       .copy(look)
-      .add(new THREE.Vector3(...(world?.spec.camera || [10, 12, 15])));
+      .add(
+        new THREE.Vector3(
+          Math.sin(yaw) * Math.cos(tilt) * radius,
+          Math.sin(tilt) * radius,
+          Math.cos(yaw) * Math.cos(tilt) * radius,
+        ),
+      );
     camera.lookAt(look);
     camera.updateProjectionMatrix();
-    renderer.render(scene, camera);
+    camera.updateMatrixWorld();
+    $("zoomValue").textContent = Math.round(view.zoom * 100) + "%";
+    $("zoomIn").disabled = view.zoom >= 2.5;
+    $("zoomOut").disabled = view.zoom <= 0.8;
+    if (frameId === null) renderer.render(scene, camera);
   }
+  const layoutObserver = new ResizeObserver(resize);
+  layoutObserver.observe(document.querySelector(".card"));
+  layoutObserver.observe(document.querySelector(".hud"));
   listen(window, "resize", resize);
   listen(canvas, "webglcontextlost", (e) => {
     e.preventDefault();
@@ -1343,6 +1547,8 @@
       pending = null;
       clearTimeout(toastTimer);
       stopVoice();
+      layoutObserver.disconnect();
+      clearGestures();
       events.abort();
       const geometries = new Set(),
         materials = new Set(),
