@@ -53,6 +53,20 @@ bash "$script" "$app" "$test_root/bin/php" "$archive" check
 test ! -f "$app/commands.log"
 test -f "$app/app/Old.php"
 
+fixture missing-file
+rm "$app/config.local.php"
+if bash "$script" "$app" "$test_root/bin/php" "$archive" check > "$test_root/missing.log" 2>&1; then exit 1; fi
+grep -q 'missing file config.local.php' "$test_root/missing.log"
+test ! -e "$app/commands.log"
+
+fixture missing-tool
+mkdir "$test_root/tools-without-mysql"
+for tool in rsync tar flock; do
+    ln -s "$(command -v "$tool")" "$test_root/tools-without-mysql/$tool"
+done
+if PATH="$test_root/tools-without-mysql" /bin/bash "$script" "$app" "$test_root/bin/php" "$archive" check > "$test_root/tool.log" 2>&1; then exit 1; fi
+grep -q 'tool mysqldump unavailable in noninteractive PATH' "$test_root/tool.log"
+
 fixture success
 bash "$script" "$app" "$test_root/bin/php" "$archive" deploy
 test "$(cat "$app/.env")" == existing-key

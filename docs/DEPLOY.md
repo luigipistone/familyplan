@@ -3,6 +3,8 @@
 ## Stato e funzionamento
 
 L'attivazione richiede ancora la configurazione di GitHub e dell'accesso SSH Plesk.
+La verifica manuale `check` funziona anche con `PLESK_DEPLOY_ENABLED=false`,
+cosi' e' possibile diagnosticare SSH senza abilitare la pubblicazione su push.
 Il codice da solo non abilita il deploy. Il collegamento GitHub usato da Codex
 non dispone attualmente dei permessi per amministrare Secrets e Variables (403).
 
@@ -52,8 +54,9 @@ main. Eventuali required reviewers richiederanno approvazione nel browser a ogni
 deploy. Le variabili di collegamento e i Secrets possono essere in `production`;
 `PLESK_DEPLOY_ENABLED` deve essere a livello repository per la condizione del job.
 
-Configurare tutti i valori prima di abilitare il job, quindi eseguire manualmente
-`check`. Dopo la verifica eseguire il primo `deploy` e controllare login, password
+Configurare tutti i valori lasciando `PLESK_DEPLOY_ENABLED=false`, quindi eseguire
+manualmente `check`. Dopo la verifica impostare la variabile su `true`, eseguire
+il primo `deploy` e controllare login, password
 salvate, media soundboard e foto. Il workflow controlla automaticamente `/up`.
 Il provider deve consentire connessioni SSH dai runner GitHub ospitati.
 

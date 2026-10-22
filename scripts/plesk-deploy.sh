@@ -1,21 +1,47 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 umask 077
+stage='arguments'
+trap 'echo "Plesk failed during $stage (line $LINENO)." >&2' ERR
+require() {
+    local message=$1
+    shift
+    if ! "$@"; then
+        echo "Plesk prerequisite failed: $message" >&2
+        return 1
+    fi
+}
 
 app=${1:?Missing Laravel directory}
 php=${2:?Missing PHP binary}
 archive=${3:?Missing release archive}
 operation=${4:-check}
 [[ "$operation" == check || "$operation" == deploy ]]
+stage='Laravel directory'
 cd "$app"
 app=$PWD
-for tool in rsync tar flock mysqldump; do command -v "$tool" >/dev/null; done
-test -x "$php"
-test -f artisan && test -f .env && test -f config.local.php
-test -f vendor/autoload.php && test -d storage && test -d public
-test -w . && test -w storage && test -w bootstrap/cache
+echo 'Plesk: checking server prerequisites.'
+stage='server tools'
+for tool in rsync tar flock mysqldump; do
+    require "tool $tool unavailable in noninteractive PATH" command -v "$tool" >/dev/null
+done
+require 'PHP binary not executable' test -x "$php"
+stage='application files and permissions'
+for file in artisan .env config.local.php vendor/autoload.php; do
+    require "missing file $file" test -f "$file"
+    require "unreadable file $file" test -r "$file"
+done
+for directory in storage public bootstrap/cache; do
+    require "missing directory $directory" test -d "$directory"
+done
+for directory in . storage bootstrap/cache; do
+    require "directory $directory not writable" test -w "$directory"
+done
+stage='PHP, Laravel and MySQL'
 "$php" -r '
-if (PHP_MAJOR_VERSION !== 8 || PHP_MINOR_VERSION !== 3) exit(1);
+if (PHP_MAJOR_VERSION !== 8 || PHP_MINOR_VERSION !== 3) {
+    fwrite(STDERR, "PHP 8.3 required; got ".PHP_VERSION."\n"); exit(1);
+}
 foreach (["pdo_mysql", "mbstring", "xml", "curl", "zip"] as $ext) {
     if (!extension_loaded($ext)) { fwrite(STDERR, "Missing extension: $ext\n"); exit(1); }
 }
@@ -29,6 +55,7 @@ Illuminate\Support\Facades\DB::connection()->getPdo();
 '
 echo 'Plesk preflight OK (PHP 8.3, production, APP_KEY, MySQL).'
 [[ "$operation" == deploy ]] || exit 0
+stage='deployment (see failing line)'
 
 # Serialize deployments on the server, including runs from other clients.
 exec 9>storage/framework/familyplan-deploy.lock
