@@ -70,8 +70,9 @@ Prima di migration fare un backup. Installare dipendenze Composer con --no-dev,
 applicare php artisan migrate --force, poi optimize:clear, config:cache,
 route:cache e view:cache. Non eseguire seeders per aggiornamenti ordinari.
 Il workflow `.github/workflows/ci.yml` prepara un archivio di codice, vendor di
-produzione e asset Vite dopo i test. Il job Plesk parte solo su main e soltanto
-quando la variabile repository `PLESK_DEPLOY_ENABLED` vale `true`. Nessun accesso
+produzione e asset Vite dopo i test. La pubblicazione Plesk parte solo su main e
+quando la variabile repository `PLESK_DEPLOY_ENABLED` vale `true`; la verifica
+manuale `check` funziona anche con la variabile su `false`. Nessun accesso
 SSH e' incluso in Git. Vedere [DEPLOY.md](DEPLOY.md) per attivazione e recupero.
 
 ## Proseguire da un altro dispositivo

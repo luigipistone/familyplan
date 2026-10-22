@@ -53,7 +53,8 @@ jobs:
     if: >-
       github.ref == 'refs/heads/main' &&
       github.event_name != 'pull_request' &&
-      vars.PLESK_DEPLOY_ENABLED == 'true'
+      (vars.PLESK_DEPLOY_ENABLED == 'true' ||
+       (github.event_name == 'workflow_dispatch' && inputs.operation == 'check'))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
@@ -111,13 +112,25 @@ jobs:
           EOF
       - name: Verify and deploy
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
+          stage='SSH connection and temporary directory'
+          trap 'echo "::error::Plesk step failed: $stage (line $LINENO)"' ERR
+          echo "Plesk: $stage"
           remote_dir=$(ssh plesk-deploy 'umask 077; mktemp -d "$HOME/.familyplan-deploy.XXXXXXXX"')
-          [[ "$remote_dir" =~ ^/[a-zA-Z0-9_./-]+$ ]]
+          if [[ ! "$remote_dir" =~ ^/[a-zA-Z0-9_./-]+$ ]]; then
+            echo '::error::SSH returned an invalid staging path. Check whether shell startup writes banners to standard output.'
+            exit 1
+          fi
           cleanup() { ssh plesk-deploy "rm -rf -- '$remote_dir'" || true; }
           trap cleanup EXIT
+          stage='upload deploy script'
+          echo "Plesk: $stage"
           scp scripts/plesk-deploy.sh plesk-deploy:"$remote_dir/deploy.sh"
+          stage='upload production archive'
+          echo "Plesk: $stage"
           scp "$RUNNER_TEMP/artifact/familyplan.tar.gz" plesk-deploy:"$remote_dir/familyplan.tar.gz"
+          stage='remote prerequisite checks and requested operation'
+          echo "Plesk: $stage"
           ssh plesk-deploy "bash '$remote_dir/deploy.sh' '$PLESK_PATH' '$PLESK_PHP' '$remote_dir/familyplan.tar.gz' '$OPERATION'"
       - name: Check public health endpoint
         if: env.OPERATION == 'deploy'
