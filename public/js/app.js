@@ -18,6 +18,7 @@ let pageNavigationController = null;
 let topMenuCloseTimer = null;
 let soundboardAudio = null;
 let soundboardButton = null;
+let soundboardProgressFrame = null;
 let modalScrollY = null;
 const prefetchedPages = new Set();
 
@@ -432,12 +433,34 @@ function showCopyFeedback(message = 'Copiato') {
   window.setTimeout(() => toast.remove(), 1800);
 }
 
+function updateSoundboardProgress() {
+  if (!soundboardAudio || !soundboardButton) return;
+  const duration = soundboardAudio.duration;
+  const currentTime = soundboardAudio.currentTime;
+  const progress = Number.isFinite(duration) && duration > 0 && Number.isFinite(currentTime)
+    ? Math.max(0, Math.min(1, currentTime / duration)) : 0;
+  soundboardButton.style.setProperty('--soundboard-progress', progress);
+}
+
+function animateSoundboardProgress() {
+  soundboardProgressFrame = null;
+  updateSoundboardProgress();
+  if (soundboardAudio && !soundboardAudio.paused && !soundboardAudio.ended) {
+    soundboardProgressFrame = window.requestAnimationFrame(animateSoundboardProgress);
+  }
+}
+
 function stopSoundboardAudio() {
+  if (soundboardProgressFrame !== null) {
+    window.cancelAnimationFrame(soundboardProgressFrame);
+    soundboardProgressFrame = null;
+  }
   if (soundboardAudio) {
     soundboardAudio.pause();
     soundboardAudio.currentTime = 0;
   }
   soundboardButton?.classList.remove('is-playing');
+  soundboardButton?.style.removeProperty('--soundboard-progress');
   soundboardButton?.setAttribute('aria-label', `Riproduci ${soundboardButton.querySelector('.soundboard-clip-name')?.textContent || 'clip'}`);
   soundboardAudio = null;
   soundboardButton = null;
@@ -649,12 +672,25 @@ document.addEventListener('click', event => {
     soundboardButton = soundboardClip;
     soundboardClip.classList.add('is-playing');
     soundboardClip.setAttribute('aria-label', `Ferma ${soundboardClip.querySelector('.soundboard-clip-name')?.textContent || 'clip'}`);
-    audio.addEventListener('ended', stopSoundboardAudio, { once: true });
+    const updateProgress = () => {
+      if (soundboardAudio === audio) updateSoundboardProgress();
+    };
+    ['loadedmetadata', 'durationchange', 'timeupdate', 'seeked'].forEach(type => {
+      audio.addEventListener(type, updateProgress);
+    });
+    audio.addEventListener('playing', () => {
+      if (soundboardAudio === audio && soundboardProgressFrame === null) animateSoundboardProgress();
+    });
+    audio.addEventListener('ended', () => {
+      if (soundboardAudio === audio) stopSoundboardAudio();
+    }, { once: true });
     audio.addEventListener('error', () => {
+      if (soundboardAudio !== audio) return;
       stopSoundboardAudio();
       showCopyFeedback('Audio non disponibile');
     }, { once: true });
     audio.play().catch(() => {
+      if (soundboardAudio !== audio) return;
       stopSoundboardAudio();
       showCopyFeedback('Riproduzione non riuscita');
     });

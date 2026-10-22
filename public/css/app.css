@@ -202,6 +202,26 @@
   transition: transform .16s ease, background .16s ease;
 }
 .soundboard-play svg { width: 19px; height: 19px; fill: currentColor; stroke: none; }
+.soundboard-play .soundboard-progress {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  transform: rotate(-90deg);
+  pointer-events: none;
+  opacity: 0;
+}
+.soundboard-progress-track { opacity: .2; }
+.soundboard-progress-value {
+  stroke-dasharray: 100;
+  stroke-dashoffset: calc(100 - var(--soundboard-progress, 0) * 100);
+  stroke-linecap: round;
+  opacity: .9;
+}
+.soundboard-clip.is-playing .soundboard-progress { opacity: 1; }
 .soundboard-stop-icon { display: none; }
 .soundboard-clip-name {
   margin-top: .25rem;

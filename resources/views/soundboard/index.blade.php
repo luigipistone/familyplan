@@ -38,6 +38,10 @@
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>
                         @endif
                         <span class="soundboard-play" aria-hidden="true">
+                            <svg class="soundboard-progress" viewBox="0 0 38 38" focusable="false">
+                                <circle class="soundboard-progress-track" cx="19" cy="19" r="16.5"/>
+                                <circle class="soundboard-progress-value" cx="19" cy="19" r="16.5" pathLength="100"/>
+                            </svg>
                             <svg class="soundboard-play-icon" viewBox="0 0 24 24"><path d="m9 7 8 5-8 5Z"/></svg>
                             <svg class="soundboard-stop-icon" viewBox="0 0 24 24"><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
                         </span>
