@@ -37,8 +37,9 @@
     @php($isTranslator = request()->routeIs('translator*'))
     @php($isSoundboard = request()->routeIs('soundboard*'))
     @php($isMovies = request()->routeIs('movies*'))
+    @php($isMilo = request()->routeIs('milo*'))
     @php($isProfile = request()->routeIs('profile*'))
-    @php($isUtility = $isUsers || $isSettings || $isContacts || $isLoyaltyCards || $isCoins || $isPrintQuotes || $isPasswords || $isCurrency || $isTranslator || $isSoundboard || $isMovies)
+    @php($isUtility = $isUsers || $isSettings || $isContacts || $isLoyaltyCards || $isCoins || $isPrintQuotes || $isPasswords || $isCurrency || $isTranslator || $isSoundboard || $isMovies || $isMilo)
     @php($isAdmin = auth()->user()->isAdmin())
     <header class="topbar">
         <a class="brand" href="{{ route('dashboard') }}">
@@ -84,6 +85,9 @@
                             <a @class(['top-menu-link', 'is-active' => $isTranslator]) href="{{ route('translator') }}" @if($isTranslator) aria-current="page" @endif><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h10"/><path d="M9 5a14 14 0 0 1-5 9"/><path d="M7 9a10 10 0 0 0 6 5"/><path d="M14 5h6"/><path d="M17 5v14"/><path d="m14 16 3-7 3 7"/></svg><span>Traduttore</span></a>
                             <a class="top-menu-link" href="{{ route('soundboard') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9v6M9 6v12M13 8v8M17 4v16M21 10v4"/></svg><span>Soundboard</span></a>
                             <a @class(['top-menu-link', 'is-active' => $isMovies]) href="{{ route('movies') }}" @if($isMovies) aria-current="page" @endif><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 9 4-4M9 9l4-4M15 9l4-4M3 9h18"/></svg><span>Film</span></a>
+                        </section>
+                        <section class="top-menu-group">
+                            <a @class(['top-menu-link', 'is-active' => $isMilo]) href="{{ route('milo') }}" @if($isMilo) aria-current="page" @endif><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h8a4 4 0 0 1 3.9 3.1l1.1 5.3a2 2 0 0 1-3.4 1.8L15.5 15h-7l-2.1 2.2A2 2 0 0 1 3 15.4l1.1-5.3A4 4 0 0 1 8 7Z"/><path d="M7 10v4M5 12h4M15 11h.01M18 13h.01"/></svg><span>L’isola di Milo</span></a>
                         </section>
                         @if(auth()->user()->can_manage_coin_collection)
                             <section class="top-menu-group">

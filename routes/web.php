@@ -7,6 +7,7 @@ use App\Http\Controllers\CrudController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PrintQuoteController;
 use App\Http\Controllers\MovieController;
+use App\Http\Controllers\MiloController;
 use App\Http\Controllers\SoundboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,8 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('/giochi/milo', [MiloController::class, 'index'])->name('milo');
+    Route::get('/giochi/milo/scena', [MiloController::class, 'scene'])->name('milo.scene');
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('/dashboard/meteo', [DashboardController::class, 'weather'])->name('dashboard.weather');
     Route::get('/dashboard/calcio', [DashboardController::class, 'football'])->name('dashboard.football');

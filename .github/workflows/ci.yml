@@ -27,6 +27,10 @@ jobs:
           cache: npm
       - run: bash scripts/cloud-setup.sh
       - run: vendor/bin/phpunit
+      - name: Verify Milo chapters
+        run: |
+          node --check public/js/milo/game.js
+          node --test tests/Browser/milo-chapters.test.cjs
       - name: Verify deploy safety
         run: |
           bash -n scripts/plesk-deploy.sh scripts/tests/plesk-deploy-test.sh
