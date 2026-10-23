@@ -67,6 +67,16 @@ Media Soundboard: manifest incluso; audio e WebP su Plesk esclusi da Git.
 Nel cloud la riproduzione richiede una copia autorizzata di questi file.
 Le immagini contatti/profili e i backup sono dati di produzione e restano sul server.
 
+## App dalla schermata Home
+
+Il service worker conserva soltanto asset statici, non HTML autenticato o dati
+personali. Il precaricamento delle navigazioni è disattivato; un eventuale preload
+fallito deve ripiegare sulla richiesta di rete. Errori o limiti della cache non
+devono bloccare la rete. Senza connessione, le navigazioni mostrano una pagina
+neutra con “Riprova”, senza presentare dati privati offline. La registrazione usa
+`updateViaCache: none`; aggiornare la versione quando si cambia il worker.
+Verifica: `node --test tests/Browser/service-worker.test.cjs`.
+
 ## Deploy Plesk
 
 Document root: public. Usare PHP 8.3 di Plesk. Pubblicare solo codice e asset
