@@ -2,7 +2,7 @@ let serviceWorkerRegistrationPromise = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    serviceWorkerRegistrationPromise = navigator.serviceWorker.register('/sw.js?v=20260826-1').catch(() => null);
+    serviceWorkerRegistrationPromise = navigator.serviceWorker.register('/sw.js?v=20261023-1', { updateViaCache: 'none' }).catch(() => null);
   });
 }
 
