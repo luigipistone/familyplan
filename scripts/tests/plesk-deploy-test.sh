@@ -93,7 +93,7 @@ test -f "$app/app/New.php" && test ! -e "$app/app/Old.php"
 test ! -e "$app/public/build/old.js"
 test ! -e "$app/storage/framework/down"
 test "$(stat -c %a "$app/app/New.php")" == 644
-rg_backup=$(find "$HOME/familyplan-deploy-backups" -name code-and-config.tar.gz -print -quit)
+rg_backup=$(find "$HOME/familyplan-deploy-backups" -name code-and-config.tar.gz -size +0c -print -quit)
 test -n "$rg_backup" && test "$(stat -c %a "$rg_backup")" == 600
 tar -tzf "$rg_backup" | grep -q '^./.env$'
 
@@ -107,4 +107,5 @@ fixture migration-failure
 if FAIL_MIGRATION=1 bash "$script" "$app" "$test_root/bin/php" "$archive" deploy; then exit 1; fi
 test -f "$app/storage/framework/down"
 ! grep -q 'artisan up' "$app/commands.log"
+test -f "$HOME/familyplan-deploy-backups/20200101T000003Z-1/data.zip"
 echo 'Deploy integration checks passed.'
