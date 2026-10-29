@@ -127,4 +127,18 @@ rsync -rlt --exclude=/.git/ --exclude=/.github/ --exclude=/.env --exclude=/.env.
 "$php" artisan familyplan:prune-automatic-backups
 "$php" artisan up
 maintenance=false
+# Keep five complete rollback sets; never touch manual folders or incomplete sets.
+rollback_sets=()
+for candidate in "$HOME/familyplan-deploy-backups/"*; do
+    [[ -d "$candidate" && ! -L "$candidate" ]] || continue
+    [[ "${candidate##*/}" =~ ^[0-9]{8}T[0-9]{6}Z-[0-9]+$ ]] || continue
+    [[ -f "$candidate/code-and-config.tar.gz" && -f "$candidate/data.zip" ]] || continue
+    rollback_sets+=("$candidate")
+done
+if (( ${#rollback_sets[@]} > 5 )); then
+    mapfile -t rollback_sets < <(printf '%s\n' "${rollback_sets[@]}" | LC_ALL=C sort -r)
+    for candidate in "${rollback_sets[@]:5}"; do
+        rm -rf -- "$candidate"
+    done
+fi
 echo "Deploy completed. Backup: $backup"

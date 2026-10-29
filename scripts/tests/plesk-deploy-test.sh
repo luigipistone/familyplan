@@ -68,18 +68,32 @@ if PATH="$test_root/tools-without-mysql" /bin/bash "$script" "$app" "$test_root/
 grep -q 'tool mysqldump unavailable in noninteractive PATH' "$test_root/tool.log"
 
 fixture success
+for index in {1..6}; do
+    directory="$HOME/familyplan-deploy-backups/20200101T00000${index}Z-1"
+    mkdir -p "$directory"
+    touch "$directory/data.zip" "$directory/code-and-config.tar.gz"
+done
+mkdir -p "$HOME/familyplan-deploy-backups/manual-saved"
+touch "$HOME/familyplan-deploy-backups/manual-saved/data.zip"
+ln -s manual-saved "$HOME/familyplan-deploy-backups/20190101T000000Z-1"
 bash "$script" "$app" "$test_root/bin/php" "$archive" deploy
 test "$(cat "$app/.env")" == existing-key
 test "$(cat "$app/config.local.php")" == existing-config
 test "$(cat "$app/public/media/sound.mp3")" == audio
 test "$(cat "$app/storage/app/public/photo.jpg")" == photo
 grep -q 'artisan familyplan:prune-automatic-backups' "$app/commands.log"
+test ! -e "$HOME/familyplan-deploy-backups/20200101T000001Z-1"
+test ! -e "$HOME/familyplan-deploy-backups/20200101T000002Z-1"
+test -f "$HOME/familyplan-deploy-backups/20200101T000003Z-1/data.zip"
+test -f "$HOME/familyplan-deploy-backups/manual-saved/data.zip"
+test -L "$HOME/familyplan-deploy-backups/20190101T000000Z-1"
+
 test -L "$app/public/storage"
 test -f "$app/app/New.php" && test ! -e "$app/app/Old.php"
 test ! -e "$app/public/build/old.js"
 test ! -e "$app/storage/framework/down"
 test "$(stat -c %a "$app/app/New.php")" == 644
-rg_backup=$(find "$HOME/familyplan-deploy-backups" -name code-and-config.tar.gz -print -quit)
+rg_backup=$(find "$HOME/familyplan-deploy-backups" -name code-and-config.tar.gz -size +0c -print -quit)
 test -n "$rg_backup" && test "$(stat -c %a "$rg_backup")" == 600
 tar -tzf "$rg_backup" | grep -q '^./.env$'
 
@@ -93,4 +107,5 @@ fixture migration-failure
 if FAIL_MIGRATION=1 bash "$script" "$app" "$test_root/bin/php" "$archive" deploy; then exit 1; fi
 test -f "$app/storage/framework/down"
 ! grep -q 'artisan up' "$app/commands.log"
+test -f "$HOME/familyplan-deploy-backups/20200101T000003Z-1/data.zip"
 echo 'Deploy integration checks passed.'

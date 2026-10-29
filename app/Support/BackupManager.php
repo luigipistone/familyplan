@@ -27,7 +27,7 @@ class BackupManager
                 'filename' => $file->getFilename(),
                 'label' => Carbon::createFromTimestamp($file->getMTime())->format('d/m/Y H:i'),
                 'size' => $this->humanSize($file->getSize()),
-                'type' => str_contains($file->getFilename(), '-auto-') ? 'Automatico' : 'Manuale',
+                'type' => $this->isAutomaticBackup($file->getFilename()) ? 'Automatico' : 'Manuale',
             ])
             ->values()
             ->all();
@@ -72,6 +72,11 @@ class BackupManager
         }
     }
 
+    private function isAutomaticBackup(string $filename): bool
+    {
+        return (bool) preg_match('/^familyplan-(?:auto-(?:daily|weekly|monthly)|pre-deploy|pre-restore)-[0-9]{8}-[0-9]{6}\.zip$/D', $filename);
+    }
+
     public function pruneAutomaticBackups(): int
     {
         $directory = $this->backupDirectory();
@@ -81,7 +86,7 @@ class BackupManager
 
         $expired = collect(File::files($directory))
             ->filter(fn ($file) => ! $file->isLink()
-                && preg_match('/^familyplan-auto-(daily|weekly|monthly)-[0-9]{8}-[0-9]{6}\.zip$/D', $file->getFilename()))
+                && $this->isAutomaticBackup($file->getFilename()))
             ->sortByDesc(fn ($file) => [$file->getMTime(), substr($file->getFilename(), -19), $file->getFilename()])
             ->skip(self::AUTOMATIC_BACKUP_LIMIT);
 

@@ -69,13 +69,13 @@ Le immagini contatti/profili e i backup sono dati di produzione e restano sul se
 
 ## Conservazione backup
 
-I backup programmati (`familyplan-auto-daily/weekly/monthly-*.zip`) mantengono
-complessivamente le 5 copie più recenti. La pulizia avviene dopo la creazione di
+I backup automatici (`familyplan-auto-daily/weekly/monthly-*.zip`, `familyplan-pre-deploy-*.zip`
+e `familyplan-pre-restore-*.zip`) mantengono complessivamente le 5 copie più recenti. La pulizia avviene dopo la creazione di
 un archivio completato, nel controllo dei backup pianificati e durante il deploy
 tramite `php artisan familyplan:prune-automatic-backups`. Copre quindi anche gli
-archivi programmati già esistenti, senza cambiare la frequenza configurata.
-I manuali, i pre-deploy, i pre-restore e gli archivi di rollback del deploy restano
-esclusi. Gli ZIP in costruzione sono temporanei e diventano visibili soltanto
+archivi automatici già esistenti, senza cambiare la frequenza configurata.
+I manuali restano esclusi. Anche le cartelle complete di rollback del deploy hanno
+un limite separato di 5, applicato soltanto dopo un deploy riuscito. Gli ZIP in costruzione sono temporanei e diventano visibili soltanto
 dopo la chiusura riuscita; un backup fallito non avvia la pulizia.
 
 ## App dalla schermata Home
