@@ -11,6 +11,8 @@ use ZipArchive;
 
 class BackupManager
 {
+    private const AUTOMATIC_BACKUP_LIMIT = 5;
+
     public function listBackups(): array
     {
         $directory = $this->backupDirectory();
@@ -38,6 +40,7 @@ class BackupManager
         $this->ensureDirectory($this->backupDirectory());
         $tempDirectory = storage_path('app/backup-temp/'.uniqid('familyplan-', true));
         $this->ensureDirectory($tempDirectory);
+        $pendingZipPath = null;
 
         try {
             $databaseDump = $tempDirectory.'/database.sql';
@@ -52,12 +55,46 @@ class BackupManager
 
             $filename = sprintf('familyplan-%s-%s.zip', $mode, now()->format('Ymd-His'));
             $zipPath = $this->backupDirectory().DIRECTORY_SEPARATOR.$filename;
-            $this->createZip($zipPath, $tempDirectory);
+            // Only complete archives are visible to listing and retention.
+            $pendingZipPath = $zipPath.'.pending-'.uniqid();
+            $this->createZip($pendingZipPath, $tempDirectory);
+            if (! File::move($pendingZipPath, $zipPath)) {
+                throw new RuntimeException('Non sono riuscito a salvare il backup completato.');
+            }
+            $this->pruneAutomaticBackups();
 
             return $filename;
         } finally {
+            if ($pendingZipPath !== null && is_file($pendingZipPath)) {
+                File::delete($pendingZipPath);
+            }
             File::deleteDirectory($tempDirectory);
         }
+    }
+
+    public function pruneAutomaticBackups(): int
+    {
+        $directory = $this->backupDirectory();
+        if (! is_dir($directory)) {
+            return 0;
+        }
+
+        $expired = collect(File::files($directory))
+            ->filter(fn ($file) => ! $file->isLink()
+                && preg_match('/^familyplan-auto-(daily|weekly|monthly)-[0-9]{8}-[0-9]{6}\.zip$/D', $file->getFilename()))
+            ->sortByDesc(fn ($file) => [$file->getMTime(), substr($file->getFilename(), -19), $file->getFilename()])
+            ->skip(self::AUTOMATIC_BACKUP_LIMIT);
+
+        $deleted = 0;
+        foreach ($expired as $file) {
+            if (File::delete($file->getPathname())) {
+                $deleted++;
+            } elseif (is_file($file->getPathname())) {
+                throw new RuntimeException('Non sono riuscito a eliminare un backup automatico precedente.');
+            }
+        }
+
+        return $deleted;
     }
 
     public function restoreBackup(string $filename): void
@@ -125,6 +162,8 @@ class BackupManager
 
     public function runScheduledBackup(): bool
     {
+        $this->pruneAutomaticBackups();
+
         $frequency = SystemSetting::getValue('backup_frequency', 'manual');
         if (! in_array($frequency, ['daily', 'weekly', 'monthly'], true)) {
             return false;
@@ -203,15 +242,19 @@ class BackupManager
             throw new RuntimeException('Non sono riuscito a creare l’archivio di backup.');
         }
 
-        $zip->addFile($tempDirectory.'/database.sql', 'database.sql');
-        $zip->addFile($tempDirectory.'/metadata.json', 'metadata.json');
+        if (! $zip->addFile($tempDirectory.'/database.sql', 'database.sql')
+            || ! $zip->addFile($tempDirectory.'/metadata.json', 'metadata.json')) {
+            throw new RuntimeException('Non sono riuscito a inserire database e metadati nel backup.');
+        }
 
         $storagePublic = storage_path('app/public');
         if (is_dir($storagePublic)) {
             $this->addDirectoryToZip($zip, $storagePublic, 'storage-public');
         }
 
-        $zip->close();
+        if (! $zip->close()) {
+            throw new RuntimeException('Non sono riuscito a completare l’archivio di backup.');
+        }
     }
 
     private function addDirectoryToZip(ZipArchive $zip, string $directory, string $prefix): void
@@ -223,10 +266,11 @@ class BackupManager
 
         foreach ($files as $file) {
             $relative = $prefix.'/'.ltrim(str_replace($directory, '', $file->getPathname()), DIRECTORY_SEPARATOR);
-            if ($file->isDir()) {
-                $zip->addEmptyDir($relative);
-            } else {
-                $zip->addFile($file->getPathname(), $relative);
+            $added = $file->isDir()
+                ? $zip->addEmptyDir($relative)
+                : $zip->addFile($file->getPathname(), $relative);
+            if (! $added) {
+                throw new RuntimeException('Non sono riuscito a inserire tutti i file nel backup.');
             }
         }
     }

@@ -124,6 +124,7 @@ rsync -rlt --exclude=/.git/ --exclude=/.github/ --exclude=/.env --exclude=/.env.
 "$php" artisan route:cache
 "$php" artisan view:cache
 "$php" artisan queue:restart
+"$php" artisan familyplan:prune-automatic-backups
 "$php" artisan up
 maintenance=false
 echo "Deploy completed. Backup: $backup"
