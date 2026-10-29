@@ -73,6 +73,7 @@ test "$(cat "$app/.env")" == existing-key
 test "$(cat "$app/config.local.php")" == existing-config
 test "$(cat "$app/public/media/sound.mp3")" == audio
 test "$(cat "$app/storage/app/public/photo.jpg")" == photo
+grep -q 'artisan familyplan:prune-automatic-backups' "$app/commands.log"
 test -L "$app/public/storage"
 test -f "$app/app/New.php" && test ! -e "$app/app/Old.php"
 test ! -e "$app/public/build/old.js"

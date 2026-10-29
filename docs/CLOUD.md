@@ -67,6 +67,17 @@ Media Soundboard: manifest incluso; audio e WebP su Plesk esclusi da Git.
 Nel cloud la riproduzione richiede una copia autorizzata di questi file.
 Le immagini contatti/profili e i backup sono dati di produzione e restano sul server.
 
+## Conservazione backup
+
+I backup programmati (`familyplan-auto-daily/weekly/monthly-*.zip`) mantengono
+complessivamente le 5 copie più recenti. La pulizia avviene dopo la creazione di
+un archivio completato, nel controllo dei backup pianificati e durante il deploy
+tramite `php artisan familyplan:prune-automatic-backups`. Copre quindi anche gli
+archivi programmati già esistenti, senza cambiare la frequenza configurata.
+I manuali, i pre-deploy, i pre-restore e gli archivi di rollback del deploy restano
+esclusi. Gli ZIP in costruzione sono temporanei e diventano visibili soltanto
+dopo la chiusura riuscita; un backup fallito non avvia la pulizia.
+
 ## App dalla schermata Home
 
 Il service worker conserva soltanto asset statici, non HTML autenticato o dati

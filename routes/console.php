@@ -1,7 +1,7 @@
 <?php
 
-use App\Support\ReminderPushSender;
 use App\Support\BackupManager;
+use App\Support\ReminderPushSender;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
@@ -16,3 +16,8 @@ Artisan::command('familyplan:run-scheduled-backups', function (BackupManager $ba
     $created = $backupManager->runScheduledBackup();
     $this->info($created ? 'Backup automatico creato.' : 'Nessun backup dovuto.');
 })->purpose('Esegue i backup automatici FamilyPlan quando dovuti');
+
+Artisan::command('familyplan:prune-automatic-backups', function (BackupManager $backupManager) {
+    $deleted = $backupManager->pruneAutomaticBackups();
+    $this->info("Backup automatici precedenti eliminati: {$deleted}. Conservati gli ultimi 5.");
+})->purpose('Conserva gli ultimi cinque backup automatici senza eliminare quelli manuali');
