@@ -93,3 +93,10 @@ il recupero eseguire con PHP 8.3 `artisan optimize:clear`, ricreare le cache e
 Se fallisce solo il controllo HTTP finale, l'app e' gia' uscita dalla manutenzione:
 verificare Plesk, PHP-FPM, log e `/up`. Per disabilitare i deploy impostare
 `PLESK_DEPLOY_ENABLED=false`. Le modifiche Cloud possono comunque continuare via PR.
+
+Dopo un deploy riuscito si conservano le 5 cartelle complete più recenti in
+`$HOME/familyplan-deploy-backups` (archivio codice/configurazione e `data.zip`),
+escludendo cartelle manuali, collegamenti e set incompleti. Nessuna pulizia dei
+rollback avviene durante un deploy fallito. Anche gli ZIP automatici nella lista
+backup dell’app, inclusi pre-deploy e pre-restore, hanno un limite complessivo di
+5; i backup manuali dell’app sono conservati senza questo limite.

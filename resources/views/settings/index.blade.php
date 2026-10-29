@@ -46,7 +46,7 @@
         @endif
         <section class="setting-card form-stack">
             <h2>Backup</h2>
-            <p>Sono conservati gli ultimi 5 backup programmati, complessivamente tra giornalieri, settimanali e mensili. I backup manuali e le copie prima di aggiornamenti e ripristini non vengono eliminati da questa pulizia.</p>
+            <p>Sono conservati complessivamente gli ultimi 5 backup automatici, comprese le copie prima di aggiornamenti e ripristini. I backup creati con “Crea backup ora” restano conservati senza questo limite.</p>
             <label>Frequenza backup
                 <select name="backup_frequency">
                     <option value="manual" @selected($backupFrequency === 'manual')>Solo manuale</option>

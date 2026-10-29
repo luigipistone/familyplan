@@ -40,11 +40,11 @@ class BackupRetentionTest extends TestCase
     public function test_keeps_only_the_latest_five_automatic_archives_across_frequencies(): void
     {
         $automatic = [];
-        foreach (['daily', 'weekly', 'monthly', 'daily', 'weekly', 'monthly', 'daily'] as $index => $mode) {
-            $automatic[] = $this->archive('familyplan-auto-'.$mode.'-202610'.sprintf('%02d', $index + 1).'-120000.zip', 1000 + $index);
+        foreach (['auto-daily', 'pre-deploy', 'auto-weekly', 'pre-restore', 'auto-monthly', 'pre-deploy', 'auto-daily'] as $index => $mode) {
+            $automatic[] = $this->archive('familyplan-'.$mode.'-202610'.sprintf('%02d', $index + 1).'-120000.zip', 1000 + $index);
         }
         $preserved = [];
-        foreach (['manual', 'pre-deploy', 'pre-restore', 'unknown'] as $mode) {
+        foreach (['manual', 'unknown'] as $mode) {
             $preserved[] = $this->archive('familyplan-'.$mode.'-20260901-120000.zip', 1);
         }
         $preserved[] = $this->archive('familyplan-auto-daily-20261001-120000.zip.pending-abc', 1);
@@ -61,6 +61,18 @@ class BackupRetentionTest extends TestCase
         }
         $this->assertTrue(is_link(storage_path('app/backups/familyplan-auto-daily-20200101-120000.zip')));
         $this->assertSame(0, $manager->pruneAutomaticBackups());
+    }
+
+    public function test_pre_deploy_and_pre_restore_are_labelled_automatic_and_manual_stays_manual(): void
+    {
+        foreach (['pre-deploy', 'pre-restore', 'auto-daily', 'manual'] as $mode) {
+            $this->archive('familyplan-'.$mode.'-20261001-120000.zip', 1000);
+        }
+        $listed = collect((new BackupManager)->listBackups())->keyBy('filename');
+        foreach (['pre-deploy', 'pre-restore', 'auto-daily'] as $mode) {
+            $this->assertSame('Automatico', $listed['familyplan-'.$mode.'-20261001-120000.zip']['type']);
+        }
+        $this->assertSame('Manuale', $listed['familyplan-manual-20261001-120000.zip']['type']);
     }
 
     public function test_equal_file_times_use_the_creation_date_in_the_name(): void
