@@ -162,10 +162,10 @@ class BackupManager
 
     public function runScheduledBackup(): bool
     {
-        $this->pruneAutomaticBackups();
-
         $frequency = SystemSetting::getValue('backup_frequency', 'manual');
         if (! in_array($frequency, ['daily', 'weekly', 'monthly'], true)) {
+            $this->pruneAutomaticBackups();
+
             return false;
         }
 
@@ -181,6 +181,8 @@ class BackupManager
         };
 
         if (! $due) {
+            $this->pruneAutomaticBackups();
+
             return false;
         }
 

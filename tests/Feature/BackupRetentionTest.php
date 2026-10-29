@@ -2,12 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Models\SystemSetting;
 use App\Support\BackupManager;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class BackupRetentionTest extends TestCase
 {
+    use RefreshDatabase;
+
     private string $temporaryStorage;
 
     protected function setUp(): void
@@ -106,6 +110,35 @@ class BackupRetentionTest extends TestCase
             }
             $this->assertCount(6, File::files(storage_path('app/backups')));
             $this->assertCount(0, File::glob(storage_path('app/backups/*.pending-*')));
+        });
+    }
+
+    public function test_scheduled_check_cleans_up_existing_backups_even_when_none_is_due(): void
+    {
+        SystemSetting::setValue('backup_frequency', 'daily');
+        SystemSetting::setValue('backup_last_auto_at', now()->toIso8601String());
+        for ($day = 1; $day <= 7; $day++) {
+            $this->archive('familyplan-auto-daily-2026100'.$day.'-120000.zip', 1000 + $day);
+        }
+        $this->assertFalse((new BackupManager)->runScheduledBackup());
+        $this->assertCount(5, File::files(storage_path('app/backups')));
+    }
+
+    public function test_failed_scheduled_dump_does_not_remove_previous_archives(): void
+    {
+        SystemSetting::setValue('backup_frequency', 'daily');
+        $this->withSyntheticDump(function () {
+            File::put($this->temporaryStorage.'/bin/mysqldump', "#!/bin/sh\nexit 1\n");
+            for ($day = 1; $day <= 7; $day++) {
+                $this->archive('familyplan-auto-daily-2026100'.$day.'-120000.zip', 1000 + $day);
+            }
+            try {
+                (new BackupManager)->runScheduledBackup();
+                $this->fail('The failed database dump must be reported.');
+            } catch (\RuntimeException $exception) {
+                $this->assertStringContainsString('Backup database fallito', $exception->getMessage());
+            }
+            $this->assertCount(7, File::files(storage_path('app/backups')));
         });
     }
 
